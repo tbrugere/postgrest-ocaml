@@ -1,0 +1,5 @@
+; Generic, sans-IO PostgREST client. No HTTP, no Brr, no Herbier types.
+(library
+ (name postgrest)
+ (public_name postgrest)
+ (libraries yojson))
