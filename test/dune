@@ -1,3 +1,0 @@
-(test
- (name test_postgrest)
- (libraries postgrest yojson alcotest))
