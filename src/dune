@@ -1,0 +1,9 @@
+; Generic, sans-IO Supabase client: Supabase.Request, Supabase.Auth and the
+; typed PostgREST query layer Supabase.Postgrest. No HTTP, no Brr, no
+; Herbier types.
+(include_subdirs qualified)
+
+(library
+ (name supabase)
+ (public_name supabase)
+ (libraries yojson))
