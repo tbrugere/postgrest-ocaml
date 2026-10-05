@@ -117,3 +117,34 @@ let encode (t: 'table t): string * string =
     let (Col param_text |  Combinator param_text) = param in 
     param_text, value
 
+
+module Syntax = struct
+    let v x = Value x
+    let any l = Any l
+    let all l = All l
+    let (=~) c rhs = Eq (c, rhs)
+    let (>~) c rhs = Gt (c, rhs)
+    let (>=~) c rhs = Gte (c, rhs)
+    let (<~) c rhs = Lt (c, rhs)
+    let (<=~) c rhs = Lte (c, rhs)
+    let (!=~) c rhs = Neq (c, rhs)
+
+    let (%~) c rhs = Like (c, rhs)
+    let (%~~) c rhs = ILike (c, rhs)
+
+
+    let (==~) c rhs = Is (c, rhs)
+    let (!==~) c rhs = IsDistinct (c, rhs)
+
+    let (!) t = Not t
+
+    let (||) t1 t2 = match t1, t2 with 
+    | Or clauses_1, Or clauses_2 -> Or (clauses_1 @ clauses_2)
+    | Or clauses, clause | clause, Or clauses -> Or (clause::clauses)
+    | t1, t2 -> Or [t1; t2]
+
+    let (&&) t1 t2 = match t1, t2 with 
+    | And clauses_1, And clauses_2 -> And (clauses_1 @ clauses_2)
+    | And clauses, clause | clause, And clauses -> And (clause::clauses)
+    | t1, t2 -> And [t1; t2]
+end
