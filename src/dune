@@ -2,4 +2,5 @@
 (library
  (name postgrest)
  (public_name postgrest)
- (libraries yojson ptime))
+ (libraries yojson ptime uri)
+ (preprocess (pps ppx_string)))
