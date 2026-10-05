@@ -118,23 +118,28 @@ let encode (t: 'table t): string * string =
     param_text, value
 
 
+(* Don’t open this module-wise, it redefines basically every operator
+
+But useful to write things like 
+filter = Filter.Syntax.(col1 = (v 3) && col2 = (any [3; 4; 5]) )
+ *)
 module Syntax = struct
     let v x = Value x
     let any l = Any l
     let all l = All l
-    let (=~) c rhs = Eq (c, rhs)
-    let (>~) c rhs = Gt (c, rhs)
-    let (>=~) c rhs = Gte (c, rhs)
-    let (<~) c rhs = Lt (c, rhs)
-    let (<=~) c rhs = Lte (c, rhs)
-    let (!=~) c rhs = Neq (c, rhs)
+    let (=) c rhs = Eq (c, rhs)
+    let (>) c rhs = Gt (c, rhs)
+    let (>=) c rhs = Gte (c, rhs)
+    let (<) c rhs = Lt (c, rhs)
+    let (<=) c rhs = Lte (c, rhs)
+    let (!=) c rhs = Neq (c, rhs)
 
-    let (%~) c rhs = Like (c, rhs)
-    let (%~~) c rhs = ILike (c, rhs)
+    let (~%) c rhs = Like (c, rhs)
+    let (~~%) c rhs = ILike (c, rhs)
 
 
-    let (==~) c rhs = Is (c, rhs)
-    let (!==~) c rhs = IsDistinct (c, rhs)
+    let (==) c rhs = Is (c, rhs)
+    let (!==) c rhs = IsDistinct (c, rhs)
 
     let (!) t = Not t
 
