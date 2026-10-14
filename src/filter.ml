@@ -1,4 +1,3 @@
-open Col
 open Url
 
 type 'a rhs = 
@@ -7,19 +6,19 @@ type 'a rhs =
     | All of 'a list
 
 type 'table t = 
-    | Eq: ('table, 'a) col * 'a rhs -> 'table t
-    | Gt: ('table, 'a) col * 'a rhs -> 'table t
-    | Gte: ('table, 'a) col * 'a rhs -> 'table t
-    | Lt: ('table, 'a) col * 'a rhs -> 'table t
-    | Lte: ('table, 'a) col * 'a rhs -> 'table t
-    | Neq: ('table, 'a) col * 'a rhs -> 'table t
-    | Like: ('table, string) col * string rhs -> 'table t
-    | ILike: ('table, string) col * string rhs -> 'table t
-    | Match: ('table, string) col * string rhs -> 'table t
-    | IMatch: ('table, string) col * string rhs -> 'table t
-    | In: ('table, 'a) col * ('a list) -> 'table t
-    | Is: ('table, 'a) col * 'a rhs -> 'table t
-    | IsDistinct: ('table, 'a) col * 'a rhs -> 'table t
+    | Eq: ('table, 'a) Col.t * 'a rhs -> 'table t
+    | Gt: ('table, 'a) Col.t * 'a rhs -> 'table t
+    | Gte: ('table, 'a) Col.t * 'a rhs -> 'table t
+    | Lt: ('table, 'a) Col.t * 'a rhs -> 'table t
+    | Lte: ('table, 'a) Col.t * 'a rhs -> 'table t
+    | Neq: ('table, 'a) Col.t * 'a rhs -> 'table t
+    | Like: ('table, string) Col.t * string rhs -> 'table t
+    | ILike: ('table, string) Col.t * string rhs -> 'table t
+    | Match: ('table, string) Col.t * string rhs -> 'table t
+    | IMatch: ('table, string) Col.t * string rhs -> 'table t
+    | In: ('table, 'a) Col.t * ('a list) -> 'table t
+    | Is: ('table, 'a) Col.t * 'a rhs -> 'table t
+    | IsDistinct: ('table, 'a) Col.t * 'a rhs -> 'table t
     (* TODO: fts ops and support tsvector col type *)
     (* TODO: set col types and operators*)
     (* TODO: range col types and operators*)
@@ -42,7 +41,7 @@ let encode_rhs ?(quote_simple_values=false) (ty: 'a ty) (rhs: 'a rhs): string =
 type encode_context = Default | InList
 type param = Col of string | Combinator of string
 
-let encode_op ?(context=Default) (col: ('table, 'a) col) (op_name: string) (rhs: 'a rhs) : (param * string) = 
+let encode_op ?(context=Default) (col: ('table, 'a) Col.t) (op_name: string) (rhs: 'a rhs) : (param * string) = 
     let encoded_rhs = encode_rhs ~quote_simple_values:(context=InList) col.ty rhs in
     Col col.name, {%string|%{op_name}%{encoded_rhs}|}
 

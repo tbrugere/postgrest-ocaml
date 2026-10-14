@@ -20,7 +20,7 @@ type _ ty =
     | Not_Null: 'a base -> 'a ty
 ;;
 
-type ('table, 'a) col = {
+type ('table, 'a) t = {
     ty: 'a ty;
     name: string;
 }
@@ -54,4 +54,22 @@ let encode_value: type a. a ty -> a -> string =
     | (Nullable _), None -> "null"
     | (Nullable base), Some v -> encode_base base v 
     | (Not_Null base), v -> encode_base base v 
+
+let base_to_json: type a. a base -> a -> Yojson.Safe.t = 
+    fun base value ->
+    match base with 
+    | Integer -> `Int value
+    | Numeric -> `Float value
+    | Bool -> `Bool value
+    | Str -> `String value
+    | TimestampTz -> `String (Ptime.to_rfc3339 value)
+    | JSON -> value
+    | Enum enum -> `String (enum.to_string value)
+
+let to_json: type a. a ty -> a -> Yojson.Safe.t =
+    fun ty value ->
+    match ty, value with 
+    | (Nullable _), None -> `Null
+    | (Nullable base), Some v -> base_to_json base v 
+    | (Not_Null base), v -> base_to_json base v 
 
