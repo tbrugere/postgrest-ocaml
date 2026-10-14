@@ -25,6 +25,8 @@ type ('table, 'a) col = {
     name: string;
 }
 
+type 'table tablename = string
+
 type (_, _) relationship_type = 
     | One: ('a, 'a option) relationship_type
     | Many: ('a, ('a list)) relationship_type

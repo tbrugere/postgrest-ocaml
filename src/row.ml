@@ -1,8 +1,9 @@
 open Col
+open Util
 
 type json = Yojson.Safe.t
 
-type error = Missing | NotAnObject | WrongType | UnexpectedNull
+type error = Missing | NotAnObject | WrongType | UnexpectedNull | DummyRow
 
 type columninfo = Name of string | Relationship of string * (columninfo list)
 
@@ -11,13 +12,11 @@ type ('table, 'a) t = {
     decode : json -> ('a, error) result;  (* one JSON object *)
   }
 
-(** returns the first error if there is one *)
-let result_all (results: ('a, 'err) result list): ('a list, 'err) result = 
-    let rec inner revd_list = function
-        | [] -> Ok (List.rev revd_list)
-        | (Ok value)::rest -> inner (value::revd_list) rest
-        | ((Error _) as err)::_ -> err
-    in inner [] results
+(*used in context where we *)
+let dummy_row: ('table, 'a) t = {
+    columns=[];
+    decode= fun _ -> Error DummyRow
+}
 
 
 let decode_base: type a. a base -> json -> (a option, error) result = 
@@ -100,8 +99,16 @@ let pair (row1: ('table, 'a) t) (row2: ('table, 'b) t): ('table, 'a * 'b) t =
         end
     }
 
+let encode_column_list (row: ('table, 'a) t) : string= 
+    row.columns
+    |> List.map (function  Name name | Relationship (name, _) -> name)
+    |> List.map Url.escape
+    |> String.concat ","
+
 
 module Syntax = struct
     let (let+) row f = map f row
     let (and+) = pair
 end
+
+

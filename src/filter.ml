@@ -1,4 +1,5 @@
 open Col
+open Url
 
 type 'a rhs = 
     | Value of 'a
@@ -27,33 +28,6 @@ type 'table t =
     | And: 'table t list -> 'table t
 
 
-let needs_escaping (s: string): bool = 
-    s 
-    |> String.to_seq
-    |> Seq.exists (function ','|'.'|':'|'('|')' -> true | _ -> false)
-
-let escape: string -> string = function
-    | s when not (needs_escaping s) -> s
-    | s ->
-        let open Buffer in 
-        let result = Buffer.create (String.length s + 7) in 
-        let add = Buffer.add_char result in
-        add '"';
-        String.iter (function
-            | ('\\' | '"') as c -> add '\\'; add c
-            | c -> add c
-        ) s;
-        add '"';
-        Buffer.contents result
-    
-let encode_list ?(left="(") ?(right=")") (ty: 'a ty) (values: 'a list) : string = 
-    let inner = 
-        values 
-        |> List.map (encode_value ty)
-        |> List.map escape
-        |> String.concat ","
-    in
-    String.concat "" [left; inner; right]
 
 let encode_rhs ?(quote_simple_values=false) (ty: 'a ty) (rhs: 'a rhs): string =
     match rhs with 
@@ -118,10 +92,22 @@ let encode (t: 'table t): string * string =
     param_text, value
 
 
-(* Don’t open this module-wise, it redefines basically every operator
+let as_filter_list = function
+    (** 
+        makes a single filter into a list, flattening And () filters.
+        useful for passing ``?col1=eq.1&col2=eq.2&col3=eq.3``
+        instead of  ``?and=(col1.eq.1,col2.eq.2,col3.eq.3)`` 
+        when building filters using the Syntax module
+     *)
+    | And l -> l
+    | filter -> [filter]
+;;
 
+
+(** Don’t open this module-wise, it redefines basically every operator
 But useful to write things like 
-filter = Filter.Syntax.(col1 = (v 3) && col2 = (any [3; 4; 5]) )
+module F = Filter.Syntax
+let filter = F.(col1 = (v 3) && col2 = (any [3; 4; 5]) )
  *)
 module Syntax = struct
     let v x = Value x
@@ -153,3 +139,4 @@ module Syntax = struct
     | And clauses, clause | clause, And clauses -> And (clause::clauses)
     | t1, t2 -> And [t1; t2]
 end
+
