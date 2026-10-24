@@ -13,7 +13,6 @@ type (_, _) field =
       -> ('table, [< `Full | `Partial ]) field
 
 type ('table, 'mode) t = {
-  table_name : string;
   fields : ('table, 'mode) field list;
 }
 
@@ -32,4 +31,3 @@ let to_json_string (input : ('table, 'mode) t) : string =
 let list_to_json_string (inputs : ('table, 'mode) t list) : string =
   inputs |> List.map to_json |> (fun l -> `List l) |> Yojson.Safe.to_string
 
-let to_table_name (input : ('table, 'mode) t) : string = input.table_name
