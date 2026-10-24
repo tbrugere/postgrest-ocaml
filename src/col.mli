@@ -13,10 +13,7 @@ type _ base =
   | JSON : Yojson.Safe.t base
   | Enum : 'a enum -> 'a base
 
-type _ ty =
-  | Nullable : 'a base -> 'a option ty
-  | Not_Null : 'a base -> 'a ty
-
+type _ ty = Nullable : 'a base -> 'a option ty | Not_Null : 'a base -> 'a ty
 type 'table table
 type optional = [ `Mandatory | `Optional ]
 type ('table, 'a, 'optional) t = { ty : 'a ty; name : string }
@@ -47,4 +44,3 @@ module BaseTypes : sig
 
   type nonrec 'table table = 'table table
 end
-

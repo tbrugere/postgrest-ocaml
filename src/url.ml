@@ -1,7 +1,8 @@
 open Col
 
 let needs_escaping (s : string) : bool =
-  s |> String.to_seq
+  s
+  |> String.to_seq
   |> Seq.exists (function ',' | '.' | ':' | '(' | ')' -> true | _ -> false)
 
 let escape : string -> string = function

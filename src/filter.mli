@@ -10,9 +10,7 @@ type 'table t =
   | Like : ('table, string, 'o) Col.t * string rhs -> 'table t
   | ILike : ('table, string, 'o) Col.t * string rhs -> 'table t
   | Match : ('table, string, 'o) Col.t * string rhs -> 'table t
-  | IMatch :
-      ('table, string, 'o) Col.t * string rhs
-      -> 'table t
+  | IMatch : ('table, string, 'o) Col.t * string rhs -> 'table t
   | In : ('table, 'a, 'o) Col.t * 'a list -> 'table t
   | Is : ('table, 'a, 'o) Col.t * 'a rhs -> 'table t
   | IsDistinct : ('table, 'a, 'o) Col.t * 'a rhs -> 'table t
@@ -21,10 +19,7 @@ type 'table t =
   | And : 'table t list -> 'table t
 
 val encode_rhs :
-  ?quote_simple_values:bool ->
-  'a Col.BaseTypes.ty ->
-  'a rhs ->
-  string
+  ?quote_simple_values:bool -> 'a Col.BaseTypes.ty -> 'a rhs -> string
 
 val encode : 'table t -> string * string
 val as_filter_list : 'a t -> 'a t list
@@ -47,4 +42,3 @@ module Syntax : sig
   val ( || ) : 'a t -> 'a t -> 'a t
   val ( && ) : 'a t -> 'a t -> 'a t
 end
-

@@ -40,8 +40,8 @@ let decode_type : type a. a ty -> json -> (a, error) result =
       let* decoded = decode_base base value in
       Option.to_result ~none:UnexpectedNull decoded
 
-let decode: ('table, 'a) t -> json -> ('a, error) result =
-  fun row json -> row.decode json
+let decode : ('table, 'a) t -> json -> ('a, error) result =
+ fun row json -> row.decode json
 
 let get_row (name : string) : json -> (json, error) result = function
   | `Assoc obj -> obj |> List.assoc_opt name |> Option.to_result ~none:Missing
@@ -98,7 +98,8 @@ let pair (row1 : ('table, 'a) t) (row2 : ('table, 'b) t) : ('table, 'a * 'b) t =
 let encode_column_list (row : ('table, 'a) t) : string =
   row.columns
   |> List.map (function Name name | Relationship (name, _) -> name)
-  |> List.map Url.escape |> String.concat ","
+  |> List.map Url.escape
+  |> String.concat ","
 
 module Syntax = struct
   let ( let+ ) row f = map f row

@@ -1,8 +1,4 @@
-type conn = {
-  base_url : Uri.t;
-  apikey : string;
-  token : unit -> string option;
-}
+type conn = { base_url : Uri.t; apikey : string; token : unit -> string option }
 
 type response = {
   status : int;
@@ -10,15 +6,10 @@ type response = {
   body : string;
 }
 
-type bad_response =
-  | RowError of int * Row.error
-  | ExpectedArray
-  | JsonError
+type bad_response = RowError of int * Row.error | ExpectedArray | JsonError
 
 type (_, _, _) card =
-  | One :
-      ('table, 'a) Row.t
-      -> ('table, 'a, [< `Mutation | `Select ]) card
+  | One : ('table, 'a) Row.t -> ('table, 'a, [< `Mutation | `Select ]) card
   | Many :
       ('table, 'a) Row.t
       -> ('table, 'a list, [< `Mutation | `Select ]) card
@@ -97,4 +88,3 @@ module Make : (H : HTTP) -> sig
     'table Col.BaseTypes.table ->
     (unit, error) result H.IO.t
 end
-

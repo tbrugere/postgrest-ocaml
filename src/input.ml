@@ -12,9 +12,7 @@ type (_, _) field =
       ('table, 'a, [ `Optional ]) Col.t * ('a, 'mode) value
       -> ('table, [< `Full | `Partial ]) field
 
-type ('table, 'mode) t = {
-  fields : ('table, 'mode) field list;
-}
+type ('table, 'mode) t = { fields : ('table, 'mode) field list }
 
 let to_json (input : ('table, 'mode) t) : Yojson.Safe.t =
   let single_to_json : type mode.
@@ -30,4 +28,3 @@ let to_json_string (input : ('table, 'mode) t) : string =
 
 let list_to_json_string (inputs : ('table, 'mode) t list) : string =
   inputs |> List.map to_json |> (fun l -> `List l) |> Yojson.Safe.to_string
-
