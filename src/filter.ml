@@ -1,4 +1,5 @@
 open Url
+open Col.BaseTypes
 
 type 'a rhs = 
     | Value of 'a
@@ -6,19 +7,19 @@ type 'a rhs =
     | All of 'a list
 
 type 'table t = 
-    | Eq: ('table, 'a) Col.t * 'a rhs -> 'table t
-    | Gt: ('table, 'a) Col.t * 'a rhs -> 'table t
-    | Gte: ('table, 'a) Col.t * 'a rhs -> 'table t
-    | Lt: ('table, 'a) Col.t * 'a rhs -> 'table t
-    | Lte: ('table, 'a) Col.t * 'a rhs -> 'table t
-    | Neq: ('table, 'a) Col.t * 'a rhs -> 'table t
-    | Like: ('table, string) Col.t * string rhs -> 'table t
-    | ILike: ('table, string) Col.t * string rhs -> 'table t
-    | Match: ('table, string) Col.t * string rhs -> 'table t
-    | IMatch: ('table, string) Col.t * string rhs -> 'table t
-    | In: ('table, 'a) Col.t * ('a list) -> 'table t
-    | Is: ('table, 'a) Col.t * 'a rhs -> 'table t
-    | IsDistinct: ('table, 'a) Col.t * 'a rhs -> 'table t
+    | Eq: ('table, 'a, 'o) Col.t * 'a rhs -> 'table t
+    | Gt: ('table, 'a, 'o) Col.t * 'a rhs -> 'table t
+    | Gte: ('table, 'a, 'o) Col.t * 'a rhs -> 'table t
+    | Lt: ('table, 'a, 'o) Col.t * 'a rhs -> 'table t
+    | Lte: ('table, 'a, 'o) Col.t * 'a rhs -> 'table t
+    | Neq: ('table, 'a, 'o) Col.t * 'a rhs -> 'table t
+    | Like: ('table, string, 'o) Col.t * string rhs -> 'table t
+    | ILike: ('table, string, 'o) Col.t * string rhs -> 'table t
+    | Match: ('table, string, 'o) Col.t * string rhs -> 'table t
+    | IMatch: ('table, string, 'o) Col.t * string rhs -> 'table t
+    | In: ('table, 'a, 'o) Col.t * ('a list) -> 'table t
+    | Is: ('table, 'a, 'o) Col.t * 'a rhs -> 'table t
+    | IsDistinct: ('table, 'a, 'o) Col.t * 'a rhs -> 'table t
     (* TODO: fts ops and support tsvector col type *)
     (* TODO: set col types and operators*)
     (* TODO: range col types and operators*)
@@ -31,8 +32,8 @@ type 'table t =
 let encode_rhs ?(quote_simple_values=false) (ty: 'a ty) (rhs: 'a rhs): string =
     match rhs with 
     (*never escape simple values. this is contrary to docs, but validated against the postgrest code*)
-    | Value a when quote_simple_values -> escape {%string|.%{encode_value ty a}|}
-    | Value a -> {%string|.%{encode_value ty a}|}
+    | Value a when quote_simple_values -> escape {%string|.%{Col.encode_value ty a}|}
+    | Value a -> {%string|.%{Col.encode_value ty a}|}
     | Any values ->  let array = encode_list ~left:"{" ~right:"}" ty values in 
                 {%string|(any).%{array}|}
     | All values -> let array = encode_list ~left:"{" ~right:"}" ty values in 
@@ -41,7 +42,7 @@ let encode_rhs ?(quote_simple_values=false) (ty: 'a ty) (rhs: 'a rhs): string =
 type encode_context = Default | InList
 type param = Col of string | Combinator of string
 
-let encode_op ?(context=Default) (col: ('table, 'a) Col.t) (op_name: string) (rhs: 'a rhs) : (param * string) = 
+let encode_op ?(context=Default) (col: ('table, 'a, 'o) Col.t) (op_name: string) (rhs: 'a rhs) : (param * string) = 
     let encoded_rhs = encode_rhs ~quote_simple_values:(context=InList) col.ty rhs in
     Col col.name, {%string|%{op_name}%{encoded_rhs}|}
 

@@ -1,5 +1,5 @@
-open Col
 open Util
+open Col.BaseTypes
 
 type json = Yojson.Safe.t
 
@@ -53,7 +53,7 @@ let get_row (name: string) : json -> (json, error) result = function
     | _ -> Error NotAnObject
 
 
-let col: ('table, 'a) Col.t -> ('table, 'a) t = function {ty; name} ->
+let col: ('table, 'a, 'o) Col.t -> ('table, 'a) t = function {ty; name} ->
     let columns = [Name name] in
     let decode (obj: json):  ('a, error) result = 
         let open Result.Syntax in 

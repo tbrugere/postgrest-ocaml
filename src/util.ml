@@ -12,3 +12,17 @@ let result_all (results: ('a, 'err) result list): ('a list, 'err) result =
         | (Ok value)::rest -> inner (value::revd_list) rest
         | ((Error _) as err)::_ -> err
     in inner [] results
+
+module UrlUtils = struct
+  let append_segment base segment =
+    let path = Uri.path base in
+    let path =
+      match String.ends_with ~suffix:"/" path with
+      | true -> path ^ Uri.pct_encode segment
+      | false -> path ^ "/" ^ Uri.pct_encode segment
+    in
+    Uri.with_path base path
+
+    let ( / ) = append_segment
+    let ( &? ) = Uri.add_query_param'
+end

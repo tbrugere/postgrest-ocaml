@@ -20,7 +20,13 @@ type _ ty =
     | Not_Null: 'a base -> 'a ty
 ;;
 
-type ('table, 'a) t = {
+type 'table table = {
+    name: string
+}
+
+type optional = [`Optional | `Mandatory]
+
+type ('table, 'a, 'optional) t = {
     ty: 'a ty;
     name: string;
 }
@@ -36,6 +42,9 @@ type ('sourcetable, 'desttable, 'a, 'out) relationship = {
     ty: ('a, 'out) relationship_type; 
     name: string;
 }
+
+let table name: 'table table = {name=name}
+let name_of_table (table: 'table table) = table.name
 
 let encode_base: type a. a base -> a -> string =
     fun base value -> 
@@ -73,3 +82,10 @@ let to_json: type a. a ty -> a -> Yojson.Safe.t =
     | (Nullable base), Some v -> base_to_json base v 
     | (Not_Null base), v -> base_to_json base v 
 
+
+module BaseTypes = struct
+    type nonrec 'a ty = 'a ty
+    type nonrec 'a base = 'a base
+    type nonrec ('sourcetable, 'desttable, 'a, 'out) relationship = ('sourcetable, 'desttable, 'a, 'out) relationship
+    type nonrec 'table table = 'table table
+end
