@@ -17,7 +17,6 @@ type _ ty = Nullable : 'a base -> 'a option ty | Not_Null : 'a base -> 'a ty
 type 'table table = { name : string }
 type optional = [ `Optional | `Mandatory ]
 type ('table, 'a, 'optional) t = { ty : 'a ty; name : string }
-type 'table tablename = string
 
 type (_, _) relationship_type =
   | One : ('a, 'a option) relationship_type

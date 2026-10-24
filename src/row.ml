@@ -40,6 +40,9 @@ let decode_type : type a. a ty -> json -> (a, error) result =
       let* decoded = decode_base base value in
       Option.to_result ~none:UnexpectedNull decoded
 
+let decode: ('table, 'a) t -> json -> ('a, error) result =
+  fun row json -> row.decode json
+
 let get_row (name : string) : json -> (json, error) result = function
   | `Assoc obj -> obj |> List.assoc_opt name |> Option.to_result ~none:Missing
   | _ -> Error NotAnObject

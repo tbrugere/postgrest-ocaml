@@ -27,10 +27,10 @@ let select_decode : type card_a cap.
   in
   match (card, json) with
   | One row, Some one_element_json ->
-      one_element_json |> row.decode
+      one_element_json |> Row.decode row
       |> Result.map_error (fun error -> RowError (0, error))
   | Many row, Some (`List l) ->
-      l |> List.map row.decode |> add_index_to_errors |> result_all
+      l |> List.map (Row.decode row) |> add_index_to_errors |> result_all
       |> Result.map_error (fun (index, error) -> RowError (index, error))
   | Many _, Some _ -> Error ExpectedArray
   | (One _ | Many _), _ -> Error JsonError
