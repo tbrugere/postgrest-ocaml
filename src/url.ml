@@ -8,7 +8,6 @@ let needs_escaping (s : string) : bool =
 let escape : string -> string = function
   | s when not (needs_escaping s) -> s
   | s ->
-      let open Buffer in
       let result = Buffer.create (String.length s + 7) in
       let add = Buffer.add_char result in
       add '"';

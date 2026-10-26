@@ -1,5 +1,3 @@
-open Col.BaseTypes
-
 type (_, _) value =
   | Value : 'a -> ('a, [< `Full | `Partial ]) value
   | Unspecified : ('a, [ `Partial ]) value

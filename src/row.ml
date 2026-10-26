@@ -96,10 +96,16 @@ let pair (row1 : ('table, 'a) t) (row2 : ('table, 'b) t) : ('table, 'a * 'b) t =
   }
 
 let encode_column_list (row : ('table, 'a) t) : string =
-  row.columns
-  |> List.map (function Name name | Relationship (name, _) -> name)
-  |> List.map Url.escape
-  |> String.concat ","
+  let rec encode_columns (columns: columninfo list) : string = 
+    columns
+    |> List.map (function 
+      | Name name  -> name
+      | Relationship (name, inner_columns) -> encode_relationship name columns)
+    |> List.map Url.escape
+    |> String.concat ","
+  and encode_relationship (name: string) (inner_columns: columninfo list) : string =
+    {%string|%{name}(%{encode_columns inner_columns})|}
+  in encode_columns row.columns
 
 module Syntax = struct
   let ( let+ ) row f = map f row
