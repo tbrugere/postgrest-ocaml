@@ -99,12 +99,11 @@ let encode_column_list (row : ('table, 'a) t) : string =
   let rec encode_columns (columns: columninfo list) : string = 
     columns
     |> List.map (function 
-      | Name name  -> name
-      | Relationship (name, inner_columns) -> encode_relationship name columns)
-    |> List.map Url.escape
+      | Name name  -> Url.escape name
+      | Relationship (name, inner_columns) -> encode_relationship name inner_columns)
     |> String.concat ","
   and encode_relationship (name: string) (inner_columns: columninfo list) : string =
-    {%string|%{name}(%{encode_columns inner_columns})|}
+    {%string|%{Url.escape name}(%{encode_columns inner_columns})|}
   in encode_columns row.columns
 
 module Syntax = struct
