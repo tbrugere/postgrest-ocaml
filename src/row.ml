@@ -21,6 +21,8 @@ let decode_base : type a. a base -> json -> (a option, error) result =
   | Integer, `Int a -> Ok (Some a)
   | Integer, `Intlit a -> Ok (Some (int_of_string a))
   | Numeric, `Float a -> Ok (Some a)
+  | Numeric, `Int a -> Ok (Some (float_of_int a))
+  | Numeric, `Intlit a -> Ok (Some (float_of_string a))
   | Bool, `Bool a -> Ok (Some a)
   | Str, `String a -> Ok (Some a)
   | TimestampTz, `String a ->
@@ -29,6 +31,7 @@ let decode_base : type a. a base -> json -> (a option, error) result =
       | _ -> Error WrongType
       end
   | JSON, a -> Ok (Some a)
+  | Enum enum, `String s -> Ok (enum.of_string s)
   | _ -> Error WrongType
 
 let decode_type : type a. a ty -> json -> (a, error) result =
