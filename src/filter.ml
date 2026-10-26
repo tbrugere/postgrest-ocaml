@@ -32,7 +32,7 @@ type 'table t =
 let encode_rhs ?(quote_simple_values=false) (ty: 'a ty) (rhs: 'a rhs): string =
     match rhs with 
     (*never escape simple values. this is contrary to docs, but validated against the postgrest code*)
-    | Value a when quote_simple_values -> escape {%string|.%{Col.encode_value ty a}|}
+    | Value a when quote_simple_values ->  {%string|.%{escape (Col.encode_value ty a)}|}
     | Value a -> {%string|.%{Col.encode_value ty a}|}
     | Any values ->  let array = encode_list ~left:"{" ~right:"}" ty values in 
                 {%string|(any).%{array}|}
@@ -85,6 +85,7 @@ and encode_children (children: 'table t list) =
     |> List.map (encode_base ~context:InList)
     |> List.map flatten_param
     |> String.concat ","
+    |> (fun x -> {%string|(%{x})|})
 
 let encode (t: 'table t): string * string = 
     let param, value =  encode_base ~context:Default t in
