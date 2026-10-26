@@ -1,0 +1,1205 @@
+[
+  {
+    "method": "GET",
+    "name": "select_all_plants",
+    "path_query": "/plants?select=id,name,scientific_name,status,rating,height_cm,is_native,created_at,tags&order=name",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "created_at": "2026-03-01T10:00:00+00:00",
+        "height_cm": 30.5,
+        "id": "00000000-0000-0000-0000-000000000001",
+        "is_native": true,
+        "name": "Arnica",
+        "rating": 5,
+        "scientific_name": "Arnica montana",
+        "status": "active",
+        "tags": {
+          "alt": [
+            1500,
+            2500
+          ],
+          "color": "yellow"
+        }
+      },
+      {
+        "created_at": "2026-04-15T08:30:00+00:00",
+        "height_cm": 120,
+        "id": "00000000-0000-0000-0000-000000000002",
+        "is_native": true,
+        "name": "Gentiane jaune",
+        "rating": null,
+        "scientific_name": "Gentiana lutea",
+        "status": "active",
+        "tags": null
+      },
+      {
+        "created_at": "2026-05-20T16:45:00+00:00",
+        "height_cm": null,
+        "id": "00000000-0000-0000-0000-000000000003",
+        "is_native": false,
+        "name": "Plante, inconnue",
+        "rating": 2,
+        "scientific_name": "Mystery (sp.)",
+        "status": "archived",
+        "tags": []
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?order=name&select=id%2Cname%2Cscientific_name%2Cstatus%2Crating%2Cheight_cm%2Cis_native%2Ccreated_at%2Ctags",
+      "content-range": "0-2/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?select=id,name,scientific_name,status,rating,height_cm,is_native,created_at,tags&order=name"
+  },
+  {
+    "method": "GET",
+    "name": "select_one_plant",
+    "path_query": "/plants?id=eq.00000000-0000-0000-0000-000000000001&select=id,name",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/vnd.pgrst.object+json"
+    },
+    "response_body": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "name": "Arnica"
+    },
+    "response_headers": {
+      "content-location": "/plants?id=eq.00000000-0000-0000-0000-000000000001&select=id%2Cname",
+      "content-range": "0-0/*",
+      "content-type": "application/vnd.pgrst.object+json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?id=eq.00000000-0000-0000-0000-000000000001&select=id,name"
+  },
+  {
+    "method": "GET",
+    "name": "select_one_missing",
+    "path_query": "/plants?id=eq.00000000-0000-0000-0000-000000000099&select=id,name",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/vnd.pgrst.object+json"
+    },
+    "response_body": {
+      "code": "PGRST116",
+      "details": "The result contains 0 rows",
+      "hint": null,
+      "message": "Cannot coerce the result to a single JSON object"
+    },
+    "response_headers": {
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 406,
+    "url_sent": "/plants?id=eq.00000000-0000-0000-0000-000000000099&select=id,name"
+  },
+  {
+    "method": "GET",
+    "name": "select_eq_with_space",
+    "path_query": "/plants?scientific_name=eq.Arnica montana&select=id,name",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "name": "Arnica"
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?scientific_name=eq.Arnica%20montana&select=id%2Cname",
+      "content-range": "0-0/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?scientific_name=eq.Arnica%20montana&select=id,name"
+  },
+  {
+    "method": "GET",
+    "name": "select_eq_with_comma",
+    "path_query": "/plants?name=eq.Plante, inconnue&select=id,name",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000003",
+        "name": "Plante, inconnue"
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?name=eq.Plante%2C%20inconnue&select=id%2Cname",
+      "content-range": "0-0/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?name=eq.Plante,%20inconnue&select=id,name"
+  },
+  {
+    "method": "GET",
+    "name": "select_in_enum",
+    "path_query": "/plants?status=in.(active,archived)&select=id,status&order=id",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "status": "active"
+      },
+      {
+        "id": "00000000-0000-0000-0000-000000000002",
+        "status": "active"
+      },
+      {
+        "id": "00000000-0000-0000-0000-000000000003",
+        "status": "archived"
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?order=id&select=id%2Cstatus&status=in.%28active%2Carchived%29",
+      "content-range": "0-2/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?status=in.(active,archived)&select=id,status&order=id"
+  },
+  {
+    "method": "GET",
+    "name": "select_in_with_quoted_comma",
+    "path_query": "/plants?name=in.(\"Plante, inconnue\",Arnica)&select=id,name&order=id",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "name": "Arnica"
+      },
+      {
+        "id": "00000000-0000-0000-0000-000000000003",
+        "name": "Plante, inconnue"
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?name=in.%28%22Plante%2C%20inconnue%22%2CArnica%29&order=id&select=id%2Cname",
+      "content-range": "0-1/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?name=in.(%22Plante,%20inconnue%22,Arnica)&select=id,name&order=id"
+  },
+  {
+    "method": "GET",
+    "name": "select_or",
+    "path_query": "/plants?or=(rating.gte.4,is_native.is.true)&select=id,name&order=id",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "name": "Arnica"
+      },
+      {
+        "id": "00000000-0000-0000-0000-000000000002",
+        "name": "Gentiane jaune"
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?or=%28rating.gte.4%2Cis_native.is.true%29&order=id&select=id%2Cname",
+      "content-range": "0-1/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?or=(rating.gte.4,is_native.is.true)&select=id,name&order=id"
+  },
+  {
+    "method": "GET",
+    "name": "select_and_in_tree",
+    "path_query": "/plants?and=(rating.not.is.null,name.like.A*)&select=id,name",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "name": "Arnica"
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?and=%28rating.not.is.null%2Cname.like.A%2A%29&select=id%2Cname",
+      "content-range": "0-0/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?and=(rating.not.is.null,name.like.A*)&select=id,name"
+  },
+  {
+    "method": "GET",
+    "name": "select_not_or",
+    "path_query": "/plants?not.or=(rating.gte.4,is_native.is.true)&select=id,name",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000003",
+        "name": "Plante, inconnue"
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?not.or=%28rating.gte.4%2Cis_native.is.true%29&select=id%2Cname",
+      "content-range": "0-0/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?not.or=(rating.gte.4,is_native.is.true)&select=id,name"
+  },
+  {
+    "method": "GET",
+    "name": "select_nested_tree",
+    "path_query": "/plants?and=(is_native.is.true,or(rating.is.null,rating.gte.5))&select=id,name&order=id",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "name": "Arnica"
+      },
+      {
+        "id": "00000000-0000-0000-0000-000000000002",
+        "name": "Gentiane jaune"
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?and=%28is_native.is.true%2Cor%28rating.is.null%2Crating.gte.5%29%29&order=id&select=id%2Cname",
+      "content-range": "0-1/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?and=(is_native.is.true,or(rating.is.null,rating.gte.5))&select=id,name&order=id"
+  },
+  {
+    "method": "GET",
+    "name": "select_tree_value_with_comma",
+    "path_query": "/plants?or=(name.eq.\"Plante, inconnue\",name.eq.Arnica)&select=id,name&order=id",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "name": "Arnica"
+      },
+      {
+        "id": "00000000-0000-0000-0000-000000000003",
+        "name": "Plante, inconnue"
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?or=%28name.eq.%22Plante%2C%20inconnue%22%2Cname.eq.Arnica%29&order=id&select=id%2Cname",
+      "content-range": "0-1/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?or=(name.eq.%22Plante,%20inconnue%22,name.eq.Arnica)&select=id,name&order=id"
+  },
+  {
+    "method": "GET",
+    "name": "select_any",
+    "path_query": "/plants?scientific_name=eq(any).{Arnica montana,Gentiana lutea}&select=id,name&order=id",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "name": "Arnica"
+      },
+      {
+        "id": "00000000-0000-0000-0000-000000000002",
+        "name": "Gentiane jaune"
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?order=id&scientific_name=eq%28any%29.%7BArnica%20montana%2CGentiana%20lutea%7D&select=id%2Cname",
+      "content-range": "0-1/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?scientific_name=eq(any).{Arnica%20montana,Gentiana%20lutea}&select=id,name&order=id"
+  },
+  {
+    "method": "GET",
+    "name": "select_any_quoted",
+    "path_query": "/plants?name=eq(any).{\"Plante, inconnue\",Arnica}&select=id,name&order=id",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "name": "Arnica"
+      },
+      {
+        "id": "00000000-0000-0000-0000-000000000003",
+        "name": "Plante, inconnue"
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?name=eq%28any%29.%7B%22Plante%2C%20inconnue%22%2CArnica%7D&order=id&select=id%2Cname",
+      "content-range": "0-1/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?name=eq(any).{%22Plante,%20inconnue%22,Arnica}&select=id,name&order=id"
+  },
+  {
+    "method": "GET",
+    "name": "select_is_null",
+    "path_query": "/plants?rating=is.null&select=id,rating",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000002",
+        "rating": null
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?rating=is.null&select=id%2Crating",
+      "content-range": "0-0/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?rating=is.null&select=id,rating"
+  },
+  {
+    "method": "GET",
+    "name": "select_not_is_null",
+    "path_query": "/plants?rating=not.is.null&select=id,rating&order=id",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "rating": 5
+      },
+      {
+        "id": "00000000-0000-0000-0000-000000000003",
+        "rating": 2
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?order=id&rating=not.is.null&select=id%2Crating",
+      "content-range": "0-1/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?rating=not.is.null&select=id,rating&order=id"
+  },
+  {
+    "method": "GET",
+    "name": "select_numeric_gt",
+    "path_query": "/plants?height_cm=gt.30.5&select=id,height_cm",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "height_cm": 120,
+        "id": "00000000-0000-0000-0000-000000000002"
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?height_cm=gt.30.5&select=id%2Cheight_cm",
+      "content-range": "0-0/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?height_cm=gt.30.5&select=id,height_cm"
+  },
+  {
+    "method": "GET",
+    "name": "select_numeric_gte",
+    "path_query": "/plants?height_cm=gte.30.5&select=id,height_cm&order=id",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "height_cm": 30.5,
+        "id": "00000000-0000-0000-0000-000000000001"
+      },
+      {
+        "height_cm": 120,
+        "id": "00000000-0000-0000-0000-000000000002"
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?height_cm=gte.30.5&order=id&select=id%2Cheight_cm",
+      "content-range": "0-1/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?height_cm=gte.30.5&select=id,height_cm&order=id"
+  },
+  {
+    "method": "GET",
+    "name": "select_timestamp_gt",
+    "path_query": "/observations?taken_at=gt.2026-06-15T00:00:00Z&select=id,taken_at&order=id",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "id": "10000000-0000-0000-0000-000000000002",
+        "taken_at": "2026-07-03T09:10:00+00:00"
+      },
+      {
+        "id": "10000000-0000-0000-0000-000000000003",
+        "taken_at": "2026-06-20T11:00:00+00:00"
+      }
+    ],
+    "response_headers": {
+      "content-location": "/observations?order=id&select=id%2Ctaken_at&taken_at=gt.2026-06-15T00%3A00%3A00Z",
+      "content-range": "0-1/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/observations?taken_at=gt.2026-06-15T00:00:00Z&select=id,taken_at&order=id"
+  },
+  {
+    "method": "GET",
+    "name": "select_enum_eq",
+    "path_query": "/plants?status=eq.archived&select=id,status",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000003",
+        "status": "archived"
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?select=id%2Cstatus&status=eq.archived",
+      "content-range": "0-0/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?status=eq.archived&select=id,status"
+  },
+  {
+    "method": "GET",
+    "name": "select_bool_eq",
+    "path_query": "/plants?is_native=eq.true&select=id,is_native&order=id",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "is_native": true
+      },
+      {
+        "id": "00000000-0000-0000-0000-000000000002",
+        "is_native": true
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?is_native=eq.true&order=id&select=id%2Cis_native",
+      "content-range": "0-1/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?is_native=eq.true&select=id,is_native&order=id"
+  },
+  {
+    "method": "GET",
+    "name": "select_like",
+    "path_query": "/plants?name=like.*ane*&select=id,name&order=id",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000002",
+        "name": "Gentiane jaune"
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?name=like.%2Aane%2A&order=id&select=id%2Cname",
+      "content-range": "0-0/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?name=like.*ane*&select=id,name&order=id"
+  },
+  {
+    "method": "GET",
+    "name": "select_ilike",
+    "path_query": "/plants?name=ilike.*ARNICA*&select=id,name",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "name": "Arnica"
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?name=ilike.%2AARNICA%2A&select=id%2Cname",
+      "content-range": "0-0/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?name=ilike.*ARNICA*&select=id,name"
+  },
+  {
+    "method": "GET",
+    "name": "select_jsonb",
+    "path_query": "/plants?id=eq.00000000-0000-0000-0000-000000000001&select=id,tags",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "tags": {
+          "alt": [
+            1500,
+            2500
+          ],
+          "color": "yellow"
+        }
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?id=eq.00000000-0000-0000-0000-000000000001&select=id%2Ctags",
+      "content-range": "0-0/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?id=eq.00000000-0000-0000-0000-000000000001&select=id,tags"
+  },
+  {
+    "method": "GET",
+    "name": "select_embed_many",
+    "path_query": "/plants?id=eq.00000000-0000-0000-0000-000000000001&select=id,name,observations(id,note)",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "name": "Arnica",
+        "observations": [
+          {
+            "id": "10000000-0000-0000-0000-000000000001",
+            "note": "En fleur"
+          },
+          {
+            "id": "10000000-0000-0000-0000-000000000002",
+            "note": null
+          }
+        ]
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?id=eq.00000000-0000-0000-0000-000000000001&select=id%2Cname%2Cobservations%28id%2Cnote%29",
+      "content-range": "0-0/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?id=eq.00000000-0000-0000-0000-000000000001&select=id,name,observations(id,note)"
+  },
+  {
+    "method": "GET",
+    "name": "select_embed_many_empty",
+    "path_query": "/plants?id=eq.00000000-0000-0000-0000-000000000002&select=id,observations(id)",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000002",
+        "observations": [
+          {
+            "id": "10000000-0000-0000-0000-000000000003"
+          }
+        ]
+      }
+    ],
+    "response_headers": {
+      "content-location": "/plants?id=eq.00000000-0000-0000-0000-000000000002&select=id%2Cobservations%28id%29",
+      "content-range": "0-0/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/plants?id=eq.00000000-0000-0000-0000-000000000002&select=id,observations(id)"
+  },
+  {
+    "method": "GET",
+    "name": "select_embed_to_one",
+    "path_query": "/observations?id=eq.10000000-0000-0000-0000-000000000001&select=id,note,plants(id,name)",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": [
+      {
+        "id": "10000000-0000-0000-0000-000000000001",
+        "note": "En fleur",
+        "plants": {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "name": "Arnica"
+        }
+      }
+    ],
+    "response_headers": {
+      "content-location": "/observations?id=eq.10000000-0000-0000-0000-000000000001&select=id%2Cnote%2Cplants%28id%2Cname%29",
+      "content-range": "0-0/*",
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 200,
+    "url_sent": "/observations?id=eq.10000000-0000-0000-0000-000000000001&select=id,note,plants(id,name)"
+  },
+  {
+    "method": "GET",
+    "name": "select_bad_column",
+    "path_query": "/plants?select=nope",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": {
+      "code": "42703",
+      "details": null,
+      "hint": "Perhaps you meant to reference the column \"plants.name\".",
+      "message": "column plants.nope does not exist"
+    },
+    "response_headers": {
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 400,
+    "url_sent": "/plants?select=nope"
+  },
+  {
+    "method": "GET",
+    "name": "select_bad_table",
+    "path_query": "/nothing?select=id",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json"
+    },
+    "response_body": {
+      "code": "PGRST205",
+      "details": null,
+      "hint": null,
+      "message": "Could not find the table 'public.nothing' in the schema cache"
+    },
+    "response_headers": {
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 404,
+    "url_sent": "/nothing?select=id"
+  },
+  {
+    "method": "POST",
+    "name": "insert_minimal",
+    "path_query": "/plants",
+    "request_body": {
+      "id": "00000000-0000-0000-0000-000000000004",
+      "is_native": false,
+      "name": "Nouvelle"
+    },
+    "request_headers": {
+      "Content-Type": "application/json",
+      "Prefer": "missing=default"
+    },
+    "response_body": "",
+    "response_headers": {
+      "content-range": "*/*",
+      "preference-applied": "missing=default"
+    },
+    "status": 201,
+    "url_sent": "/plants"
+  },
+  {
+    "method": "POST",
+    "name": "insert_returning_object",
+    "path_query": "/plants?select=id,name,status,created_at",
+    "request_body": {
+      "id": "00000000-0000-0000-0000-000000000004",
+      "is_native": false,
+      "name": "Nouvelle"
+    },
+    "request_headers": {
+      "Accept": "application/vnd.pgrst.object+json",
+      "Content-Type": "application/json",
+      "Prefer": "return=representation,missing=default"
+    },
+    "response_body": {
+      "created_at": "2026-01-01T00:00:00+00:00",
+      "id": "00000000-0000-0000-0000-000000000004",
+      "name": "Nouvelle",
+      "status": "active"
+    },
+    "response_headers": {
+      "content-range": "*/*",
+      "content-type": "application/vnd.pgrst.object+json; charset=utf-8",
+      "preference-applied": "missing=default, return=representation"
+    },
+    "status": 201,
+    "url_sent": "/plants?select=id,name,status,created_at"
+  },
+  {
+    "method": "POST",
+    "name": "insert_returning_array",
+    "path_query": "/plants?select=id,name,status",
+    "request_body": {
+      "id": "00000000-0000-0000-0000-000000000004",
+      "is_native": false,
+      "name": "Nouvelle"
+    },
+    "request_headers": {
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+      "Prefer": "return=representation,missing=default"
+    },
+    "response_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000004",
+        "name": "Nouvelle",
+        "status": "active"
+      }
+    ],
+    "response_headers": {
+      "content-range": "*/*",
+      "content-type": "application/json; charset=utf-8",
+      "preference-applied": "missing=default, return=representation"
+    },
+    "status": 201,
+    "url_sent": "/plants?select=id,name,status"
+  },
+  {
+    "method": "POST",
+    "name": "insert_batch_returning_array",
+    "path_query": "/plants?select=id,name",
+    "request_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000004",
+        "is_native": false,
+        "name": "Nouvelle",
+        "rating": null
+      },
+      {
+        "id": "00000000-0000-0000-0000-000000000005",
+        "is_native": true,
+        "name": "Autre",
+        "rating": 3
+      }
+    ],
+    "request_headers": {
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+      "Prefer": "return=representation,missing=default"
+    },
+    "response_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000004",
+        "name": "Nouvelle"
+      },
+      {
+        "id": "00000000-0000-0000-0000-000000000005",
+        "name": "Autre"
+      }
+    ],
+    "response_headers": {
+      "content-range": "*/*",
+      "content-type": "application/json; charset=utf-8",
+      "preference-applied": "missing=default, return=representation"
+    },
+    "status": 201,
+    "url_sent": "/plants?select=id,name"
+  },
+  {
+    "method": "POST",
+    "name": "insert_duplicate_error",
+    "path_query": "/plants",
+    "request_body": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "is_native": false,
+      "name": "Doublon"
+    },
+    "request_headers": {
+      "Content-Type": "application/json",
+      "Prefer": "missing=default"
+    },
+    "response_body": {
+      "code": "23505",
+      "details": "Key (id)=(00000000-0000-0000-0000-000000000001) already exists.",
+      "hint": null,
+      "message": "duplicate key value violates unique constraint \"plants_pkey\""
+    },
+    "response_headers": {
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 409,
+    "url_sent": "/plants"
+  },
+  {
+    "method": "POST",
+    "name": "insert_not_null_violation",
+    "path_query": "/plants",
+    "request_body": {
+      "id": "00000000-0000-0000-0000-000000000004",
+      "is_native": false
+    },
+    "request_headers": {
+      "Content-Type": "application/json",
+      "Prefer": "missing=default"
+    },
+    "response_body": {
+      "code": "23502",
+      "details": "Failing row contains (00000000-0000-0000-0000-000000000004, null, null, active, null, null, f, 2026-01-01 00:00:00+00, null).",
+      "hint": null,
+      "message": "null value in column \"name\" of relation \"plants\" violates not-null constraint"
+    },
+    "response_headers": {
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 400,
+    "url_sent": "/plants"
+  },
+  {
+    "method": "POST",
+    "name": "upsert_merge",
+    "path_query": "/plants?select=id,name,rating",
+    "request_body": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "is_native": true,
+      "name": "Arnica (maj)",
+      "rating": 4
+    },
+    "request_headers": {
+      "Accept": "application/vnd.pgrst.object+json",
+      "Content-Type": "application/json",
+      "Prefer": "return=representation,resolution=merge-duplicates,missing=default"
+    },
+    "response_body": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "name": "Arnica (maj)",
+      "rating": 4
+    },
+    "response_headers": {
+      "content-range": "*/*",
+      "content-type": "application/vnd.pgrst.object+json; charset=utf-8",
+      "preference-applied": "resolution=merge-duplicates, missing=default, return=representation"
+    },
+    "status": 200,
+    "url_sent": "/plants?select=id,name,rating"
+  },
+  {
+    "method": "POST",
+    "name": "upsert_ignore",
+    "path_query": "/plants?select=id,name",
+    "request_body": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "is_native": true,
+      "name": "Ignored"
+    },
+    "request_headers": {
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+      "Prefer": "return=representation,resolution=ignore-duplicates,missing=default"
+    },
+    "response_body": [],
+    "response_headers": {
+      "content-range": "*/*",
+      "content-type": "application/json; charset=utf-8",
+      "preference-applied": "resolution=ignore-duplicates, missing=default, return=representation"
+    },
+    "status": 201,
+    "url_sent": "/plants?select=id,name"
+  },
+  {
+    "method": "PATCH",
+    "name": "update_partial_minimal",
+    "path_query": "/plants?id=eq.00000000-0000-0000-0000-000000000002",
+    "request_body": {
+      "rating": 4
+    },
+    "request_headers": {
+      "Content-Type": "application/json",
+      "Prefer": "missing=default"
+    },
+    "response_body": "",
+    "response_headers": {
+      "content-range": "0-0/*",
+      "preference-applied": "missing=default"
+    },
+    "status": 204,
+    "url_sent": "/plants?id=eq.00000000-0000-0000-0000-000000000002"
+  },
+  {
+    "method": "PATCH",
+    "name": "update_returning_object",
+    "path_query": "/plants?id=eq.00000000-0000-0000-0000-000000000002&select=id,rating,scientific_name",
+    "request_body": {
+      "rating": 4,
+      "scientific_name": null
+    },
+    "request_headers": {
+      "Accept": "application/vnd.pgrst.object+json",
+      "Content-Type": "application/json",
+      "Prefer": "return=representation,missing=default"
+    },
+    "response_body": {
+      "id": "00000000-0000-0000-0000-000000000002",
+      "rating": 4,
+      "scientific_name": null
+    },
+    "response_headers": {
+      "content-range": "0-0/*",
+      "content-type": "application/vnd.pgrst.object+json; charset=utf-8",
+      "preference-applied": "missing=default, return=representation"
+    },
+    "status": 200,
+    "url_sent": "/plants?id=eq.00000000-0000-0000-0000-000000000002&select=id,rating,scientific_name"
+  },
+  {
+    "method": "PATCH",
+    "name": "update_no_match",
+    "path_query": "/plants?id=eq.00000000-0000-0000-0000-000000000099&select=id",
+    "request_body": {
+      "rating": 1
+    },
+    "request_headers": {
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+      "Prefer": "return=representation,missing=default"
+    },
+    "response_body": [],
+    "response_headers": {
+      "content-range": "*/*",
+      "content-type": "application/json; charset=utf-8",
+      "preference-applied": "missing=default, return=representation"
+    },
+    "status": 200,
+    "url_sent": "/plants?id=eq.00000000-0000-0000-0000-000000000099&select=id"
+  },
+  {
+    "method": "PATCH",
+    "name": "update_empty_body",
+    "path_query": "/plants?id=eq.00000000-0000-0000-0000-000000000002",
+    "request_body": {},
+    "request_headers": {
+      "Content-Type": "application/json",
+      "Prefer": "missing=default"
+    },
+    "response_body": "",
+    "response_headers": {
+      "content-range": "*/*",
+      "preference-applied": "missing=default"
+    },
+    "status": 204,
+    "url_sent": "/plants?id=eq.00000000-0000-0000-0000-000000000002"
+  },
+  {
+    "method": "DELETE",
+    "name": "delete_minimal",
+    "path_query": "/observations?id=eq.10000000-0000-0000-0000-000000000004",
+    "request_body": null,
+    "request_headers": {},
+    "response_body": "",
+    "response_headers": {
+      "content-range": "*/*"
+    },
+    "status": 204,
+    "url_sent": "/observations?id=eq.10000000-0000-0000-0000-000000000004"
+  },
+  {
+    "method": "DELETE",
+    "name": "delete_returning_array",
+    "path_query": "/observations?plant_id=eq.00000000-0000-0000-0000-000000000001&select=id,note",
+    "request_body": null,
+    "request_headers": {
+      "Accept": "application/json",
+      "Prefer": "return=representation"
+    },
+    "response_body": [
+      {
+        "id": "10000000-0000-0000-0000-000000000001",
+        "note": "En fleur"
+      },
+      {
+        "id": "10000000-0000-0000-0000-000000000002",
+        "note": null
+      }
+    ],
+    "response_headers": {
+      "content-range": "*/*",
+      "content-type": "application/json; charset=utf-8",
+      "preference-applied": "return=representation"
+    },
+    "status": 200,
+    "url_sent": "/observations?plant_id=eq.00000000-0000-0000-0000-000000000001&select=id,note"
+  },
+  {
+    "method": "DELETE",
+    "name": "delete_fk_violation",
+    "path_query": "/plants?id=eq.00000000-0000-0000-0000-000000000001",
+    "request_body": null,
+    "request_headers": {},
+    "response_body": {
+      "code": "23503",
+      "details": "Key (id)=(00000000-0000-0000-0000-000000000001) is still referenced from table \"observations\".",
+      "hint": null,
+      "message": "update or delete on table \"plants\" violates foreign key constraint \"observations_plant_id_fkey\" on table \"observations\""
+    },
+    "response_headers": {
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 409,
+    "url_sent": "/plants?id=eq.00000000-0000-0000-0000-000000000001"
+  },
+  {
+    "method": "POST",
+    "name": "insert_batch_mismatched_keys",
+    "path_query": "/plants",
+    "request_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000004",
+        "is_native": false,
+        "name": "Nouvelle"
+      },
+      {
+        "id": "00000000-0000-0000-0000-000000000005",
+        "is_native": true,
+        "name": "Autre",
+        "rating": 3
+      }
+    ],
+    "request_headers": {
+      "Content-Type": "application/json",
+      "Prefer": "missing=default"
+    },
+    "response_body": {
+      "code": "PGRST102",
+      "details": null,
+      "hint": null,
+      "message": "All object keys must match"
+    },
+    "response_headers": {
+      "content-type": "application/json; charset=utf-8"
+    },
+    "status": 400,
+    "url_sent": "/plants"
+  },
+  {
+    "method": "POST",
+    "name": "insert_batch_minimal",
+    "path_query": "/plants",
+    "request_body": [
+      {
+        "id": "00000000-0000-0000-0000-000000000004",
+        "is_native": false,
+        "name": "Nouvelle",
+        "rating": null
+      },
+      {
+        "id": "00000000-0000-0000-0000-000000000005",
+        "is_native": true,
+        "name": "Autre",
+        "rating": 3
+      }
+    ],
+    "request_headers": {
+      "Content-Type": "application/json",
+      "Prefer": "missing=default"
+    },
+    "response_body": "",
+    "response_headers": {
+      "content-range": "*/*",
+      "preference-applied": "missing=default"
+    },
+    "status": 201,
+    "url_sent": "/plants"
+  },
+  {
+    "method": "POST",
+    "name": "upsert_merge_minimal",
+    "path_query": "/plants",
+    "request_body": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "is_native": true,
+      "name": "Arnica (maj)",
+      "rating": 4
+    },
+    "request_headers": {
+      "Content-Type": "application/json",
+      "Prefer": "resolution=merge-duplicates,missing=default"
+    },
+    "response_body": "",
+    "response_headers": {
+      "content-range": "*/*",
+      "preference-applied": "resolution=merge-duplicates, missing=default"
+    },
+    "status": 200,
+    "url_sent": "/plants"
+  },
+  {
+    "method": "POST",
+    "name": "upsert_ignore_minimal",
+    "path_query": "/plants",
+    "request_body": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "is_native": true,
+      "name": "Ignored"
+    },
+    "request_headers": {
+      "Content-Type": "application/json",
+      "Prefer": "resolution=ignore-duplicates,missing=default"
+    },
+    "response_body": "",
+    "response_headers": {
+      "content-range": "*/*",
+      "preference-applied": "resolution=ignore-duplicates, missing=default"
+    },
+    "status": 201,
+    "url_sent": "/plants"
+  }
+]

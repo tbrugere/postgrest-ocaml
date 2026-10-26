@@ -1,3 +1,8 @@
+; Integration tests for lib/postgrest: a mock HTTP backend replays the
+; request/response pairs recorded in fixtures/scenarios.json (see
+; fixtures/README.md) and checks what the client sends and decodes.
 (test
  (name test_postgrest)
- (libraries postgrest yojson alcotest))
+ (libraries postgrest yojson ptime uri alcotest)
+ (deps
+  (glob_files fixtures/*.json)))
