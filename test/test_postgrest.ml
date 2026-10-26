@@ -11,12 +11,9 @@ open Postgrest
 open Tables
 module C = Client.Make (Mock_http)
 
-let conn : Client.conn =
-  {
-    base_url = Uri.of_string "http://localhost:3000";
-    apikey = "anon-key";
-    token = (fun () -> None);
-  }
+(* A plain PostgREST, as the fixtures were recorded: no gateway, no keys. *)
+let base_url = Uri.of_string "http://localhost:3000"
+let conn : Client.conn = { base_url; headers = (fun () -> []) }
 
 (* ---------- testables ---------- *)
 
@@ -614,7 +611,10 @@ let header_tests =
       fun () ->
         Mock_http.reset ();
         Mock_http.respond "[]";
-        let conn = { conn with token = (fun () -> Some "jwt") } in
+        let conn =
+          Client.supabase_conn base_url ~apikey:"anon-key" ~token:(fun () ->
+              Some "jwt")
+        in
         let _ = C.select conn (Many id_name_row) all Plants.table in
         let req = Mock_http.last () in
         Alcotest.(check (option string))
@@ -623,12 +623,19 @@ let header_tests =
         Alcotest.(check (option string))
           "Authorization" (Some "Bearer jwt")
           (Mock_http.header "Authorization" req) );
-    ( "no Authorization header without a token",
+    ( "no Authorization header without a token, apikey still sent",
       `Quick,
       fun () ->
         Mock_http.reset ();
         Mock_http.respond "[]";
+        let conn =
+          Client.supabase_conn base_url ~apikey:"anon-key" ~token:(fun () ->
+              None)
+        in
         let _ = C.select conn (Many id_name_row) all Plants.table in
+        Alcotest.(check (option string))
+          "apikey" (Some "anon-key")
+          (Mock_http.header "apikey" (Mock_http.last ()));
         Alcotest.(check (option string))
           "Authorization" None
           (Mock_http.header "Authorization" (Mock_http.last ())) );

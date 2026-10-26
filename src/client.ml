@@ -1,7 +1,21 @@
 open Col.BaseTypes
 open Util
 
-type conn = { base_url : Uri.t; apikey : string; token : unit -> string option }
+type conn = { 
+  base_url : Uri.t; 
+  headers: unit -> (string * string) list ;
+}
+
+
+let supabase_conn (base_url: Uri.t) ~(apikey: string) ~(token : unit -> string option) =
+  let headers () =
+    let apikey_header = ["apikey", apikey] in
+    match token () with
+    | None -> apikey_header
+    | Some token -> ("Authorization", {%string|Bearer %{token}|})::apikey_header
+  in
+  {base_url; headers}
+
 
 type response = {
   status : int;
@@ -68,20 +82,20 @@ let prefer_header : type card_a cap.
   |> String.concat ","
   |> fun x -> ("Prefer", x)
 
-let get_headers conn ~(query_type : [ `Select | `Mutation ])
+let get_headers (conn: conn) ~(query_type : [ `Select | `Mutation ])
     ?(on_conflict : [ `Error | `Upsert | `Ignore ] option)
     (response_card : ('table, 'card_a, [< `Select | `Mutation ]) card) :
     (string * string) list =
-  let token_headers =
-    match conn.token () with
-    | None -> []
-    | Some token -> [ ("Authorization", {%string|Bearer %{token}|}) ]
-  in
+  let token_headers = conn.headers () in 
   let accept_headers = accept_header_of_card response_card in
   let prefer : (string * string) list =
     [ prefer_header ?on_conflict ~query_type response_card ]
   in
-  token_headers @ accept_headers @ prefer
+  let content_type = match query_type with
+  | `Select -> []
+  | `Mutation -> ["Content-Type", "application/json"]
+  in
+  token_headers @ accept_headers @ prefer @ content_type
 
 let build_uri : type a cap.
     table:'table table ->

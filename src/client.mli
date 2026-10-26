@@ -1,4 +1,10 @@
-type conn = { base_url : Uri.t; apikey : string; token : unit -> string option }
+type conn = { 
+  base_url : Uri.t; 
+  headers: unit -> (string * string) list ;
+}
+
+
+val supabase_conn: Uri.t -> apikey: string -> token : (unit -> string option) -> conn
 
 type response = {
   status : int;
