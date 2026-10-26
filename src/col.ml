@@ -38,7 +38,7 @@ let encode_base : type a. a base -> a -> string =
   | Numeric -> string_of_float value
   | Bool -> string_of_bool value
   | Str -> value
-  | TimestampTz -> Ptime.to_rfc3339 value
+  | TimestampTz -> Ptime.to_rfc3339 ~tz_offset_s:0 value
   | JSON -> Yojson.Safe.to_string value
   | Enum enum -> enum.to_string value
 
@@ -56,7 +56,7 @@ let base_to_json : type a. a base -> a -> Yojson.Safe.t =
   | Numeric -> `Float value
   | Bool -> `Bool value
   | Str -> `String value
-  | TimestampTz -> `String (Ptime.to_rfc3339 value)
+  | TimestampTz -> `String (Ptime.to_rfc3339 ~tz_offset_s:0 value)
   | JSON -> value
   | Enum enum -> `String (enum.to_string value)
 
