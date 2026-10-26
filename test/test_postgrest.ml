@@ -494,7 +494,7 @@ let row_tests =
       `Quick,
       fun () ->
         Alcotest.(check string)
-          "columns" "id,name,observations"
+          "columns" "id,name,observations(id,note)"
           (Row.encode_column_list plant_with_obs_row) );
   ]
 
