@@ -75,7 +75,7 @@ let get_headers conn ~(query_type : [ `Select | `Mutation ])
   let token_headers =
     match conn.token () with
     | None -> []
-    | Some token -> [ ("auth", {%string|bearer %{token}|}) ]
+    | Some token -> [ ("Authorization", {%string|Bearer %{token}|}) ]
   in
   let accept_headers = accept_header_of_card response_card in
   let prefer : (string * string) list =
