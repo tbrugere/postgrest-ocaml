@@ -1047,11 +1047,7 @@ let select_scenarios =
       `Quick,
       fun () ->
         check_result "rows" ~to_json:(list id_name_json)
-          (ok
-             [
-               { id = uuid 2; name = "Gentiane jaune" };
-               { id = uuid 3; name = "Plante, inconnue" };
-             ])
+          (ok [ { id = uuid 2; name = "Gentiane jaune" } ])
           (replay "select_like" (fun () ->
                C.select conn ~order:(Row.col Plants.id) (Many id_name_row)
                  Filter.(Like (Plants.name, Value "*ane*"))
