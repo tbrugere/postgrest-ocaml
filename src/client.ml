@@ -43,7 +43,7 @@ let select_decode : type card_a cap.
 let accept_header_of_card : type card_a cap.
     ('table, card_a, cap) card -> (string * string) list = function
   | One _ -> [ ("Accept", "application/vnd.pgrst.object+json") ]
-  | Many _ -> [ ("Accept", "application/vnd.pgrst.object+json") ]
+  | Many _ -> [ ("Accept", "application/json") ]
   | Zero -> []
 
 let prefer_header : type card_a cap.
