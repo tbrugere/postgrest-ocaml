@@ -9,7 +9,7 @@ type response = {
   body : string;
 }
 
-type bad_response = RowError of int * Row.error | ExpectedArray | JsonError
+type bad_response = RowError of int * Row.error | ExpectedArray | JsonError of string
 
 type (_, _, _) card =
   | One : ('table, 'a) Row.t -> ('table, 'a, [< `Select | `Mutation ]) card
@@ -22,22 +22,22 @@ let select_decode : type card_a cap.
     ('table, card_a, cap) card -> string -> (card_a, bad_response) result =
  fun card data ->
   let json =
-    try Some (Yojson.Safe.from_string data)
-    with Yojson.Safe.Finally (_, _) -> None
+    try Ok (Yojson.Safe.from_string data)
+    with Yojson.Json_error err -> Error err
   in
   match (card, json) with
-  | One row, Some one_element_json ->
+  | One row, Ok one_element_json ->
       one_element_json
       |> Row.decode row
       |> Result.map_error (fun error -> RowError (0, error))
-  | Many row, Some (`List l) ->
+  | Many row, Ok (`List l) ->
       l
       |> List.map (Row.decode row)
       |> add_index_to_errors
       |> result_all
       |> Result.map_error (fun (index, error) -> RowError (index, error))
-  | Many _, Some _ -> Error ExpectedArray
-  | (One _ | Many _), _ -> Error JsonError
+  | Many _, Ok _ -> Error ExpectedArray
+  | (One _ | Many _), Error err -> Error (JsonError err)
   | Zero, _ -> Ok ()
 
 let accept_header_of_card : type card_a cap.

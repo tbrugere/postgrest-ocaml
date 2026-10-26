@@ -38,7 +38,7 @@ let string_of_error : C.error -> string = function
   | C.BadResponse (Client.RowError (i, e)) ->
       Printf.sprintf "BadResponse (RowError (%d, %s))" i (string_of_row_error e)
   | C.BadResponse Client.ExpectedArray -> "BadResponse ExpectedArray"
-  | C.BadResponse Client.JsonError -> "BadResponse JsonError"
+  | C.BadResponse (Client.JsonError _) -> "BadResponse JsonError"
 
 let error =
   Alcotest.testable
@@ -694,7 +694,7 @@ let header_tests =
         Mock_http.reset ();
         Mock_http.respond "<html>not json</html>";
         check_result "json" ~to_json:(list id_name_json)
-          (Error (C.BadResponse Client.JsonError))
+          (Error (C.BadResponse (Client.JsonError "")))
           (C.select conn (Many id_name_row) all Plants.table) );
     ( "object where an array was expected",
       `Quick,

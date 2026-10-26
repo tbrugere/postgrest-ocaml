@@ -6,7 +6,7 @@ type response = {
   body : string;
 }
 
-type bad_response = RowError of int * Row.error | ExpectedArray | JsonError
+type bad_response = RowError of int * Row.error | ExpectedArray | JsonError of string
 
 type (_, _, _) card =
   | One : ('table, 'a) Row.t -> ('table, 'a, [< `Mutation | `Select ]) card
