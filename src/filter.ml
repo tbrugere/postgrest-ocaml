@@ -102,7 +102,7 @@ let encode (t : 'table t) : string * string =
     passing ``?col1=eq.1&col2=eq.2&col3=eq.3`` instead of
     ``?and=(col1.eq.1,col2.eq.2,col3.eq.3)`` when building filters using the
     Syntax module *)
-let as_filter_list = function And l -> l | filter -> [ filter ]
+let as_filter_list = function And l -> l | filter -> [filter]
 
 (** Don’t open this module-wise, it redefines basically every operator But
     useful to write things like module F = Filter.Syntax let filter = F.(col1 =
@@ -127,11 +127,11 @@ module Syntax = struct
     match (t1, t2) with
     | Or clauses_1, Or clauses_2 -> Or (clauses_1 @ clauses_2)
     | Or clauses, clause | clause, Or clauses -> Or (clause :: clauses)
-    | t1, t2 -> Or [ t1; t2 ]
+    | t1, t2 -> Or [t1; t2]
 
   let ( && ) t1 t2 =
     match (t1, t2) with
     | And clauses_1, And clauses_2 -> And (clauses_1 @ clauses_2)
     | And clauses, clause | clause, And clauses -> And (clause :: clauses)
-    | t1, t2 -> And [ t1; t2 ]
+    | t1, t2 -> And [t1; t2]
 end

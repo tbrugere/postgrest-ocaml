@@ -26,4 +26,4 @@ let encode_list ?(left = "(") ?(right = ")") (ty : 'a ty) (values : 'a list) :
   let inner =
     values |> List.map (encode_value ty) |> List.map escape |> String.concat ","
   in
-  String.concat "" [ left; inner; right ]
+  String.concat "" [left; inner; right]

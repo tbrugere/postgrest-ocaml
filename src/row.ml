@@ -12,7 +12,7 @@ type ('table, 'a) t = {
 
 (*used in context where we *)
 let dummy_row : ('table, 'a) t =
-  { columns = []; decode = (fun _ -> Error DummyRow) }
+  {columns = []; decode = (fun _ -> Error DummyRow)}
 
 let decode_base : type a. a base -> json -> (a option, error) result =
  fun base value ->
@@ -55,21 +55,21 @@ let get_row (name : string) : json -> (json, error) result = function
   | _ -> Error NotAnObject
 
 let col : ('table, 'a, 'o) Col.t -> ('table, 'a) t = function
-  | { ty; name } ->
-      let columns = [ Name name ] in
+  | {ty; name} ->
+      let columns = [Name name] in
       let decode (obj : json) : ('a, error) result =
         let open Result.Syntax in
         let* value = get_row name obj in
         decode_type ty value
       in
-      { columns; decode }
+      {columns; decode}
 
 let rel : type a out.
     ('sourcetable, 'desttable, a, out) relationship ->
     ('desttable, a) t ->
     ('sourcetable, out) t =
- fun { name; ty } { columns = inner_columns; decode = inner_decode } ->
-  let columns = [ Relationship (name, inner_columns) ] in
+ fun {name; ty} {columns = inner_columns; decode = inner_decode} ->
+  let columns = [Relationship (name, inner_columns)] in
   let open Result.Syntax in
   let decode_value (value : json) : (out, error) result =
     match (ty, value) with
@@ -86,10 +86,10 @@ let rel : type a out.
     let* value = get_row name obj in
     decode_value value
   in
-  { columns; decode }
+  {columns; decode}
 
 let map (f : 'a -> 'b) (row : ('table, 'a) t) : ('table, 'b) t =
-  { row with decode = (fun x -> x |> row.decode |> Result.map f) }
+  {row with decode = (fun x -> x |> row.decode |> Result.map f)}
 
 let pair (row1 : ('table, 'a) t) (row2 : ('table, 'b) t) : ('table, 'a * 'b) t =
   {

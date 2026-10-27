@@ -14,9 +14,9 @@ type _ base =
   | Enum : 'a enum -> 'a base
 
 type _ ty = Nullable : 'a base -> 'a option ty | Not_Null : 'a base -> 'a ty
-type 'table table = { name : string }
-type optional = [ `Optional | `Mandatory ]
-type ('table, 'a, 'optional) t = { ty : 'a ty; name : string }
+type 'table table = {name : string}
+type optional = [`Optional | `Mandatory]
+type ('table, 'a, 'optional) t = {ty : 'a ty; name : string}
 
 type (_, _) relationship_type =
   | One : ('a, 'a option) relationship_type
@@ -28,7 +28,7 @@ type ('sourcetable, 'desttable, 'a, 'out) relationship = {
   name : string;
 }
 
-let table name : 'table table = { name }
+let table name : 'table table = {name}
 let name_of_table (table : 'table table) = table.name
 
 let encode_base : type a. a base -> a -> string =

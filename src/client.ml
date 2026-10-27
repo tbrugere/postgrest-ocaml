@@ -1,24 +1,20 @@
 open Col.BaseTypes
 open Util
 
-type conn = { base_url : Uri.t; headers : unit -> (string * string) list }
+type conn = {base_url : Uri.t; headers : unit -> (string * string) list}
 
 let supabase_conn (base_url : Uri.t) ~(apikey : string)
     ~(token : unit -> string option) =
   let headers () =
-    let apikey_header = [ ("apikey", apikey) ] in
+    let apikey_header = [("apikey", apikey)] in
     match token () with
     | None -> apikey_header
     | Some token ->
         ("Authorization", {%string|Bearer %{token}|}) :: apikey_header
   in
-  { base_url; headers }
+  {base_url; headers}
 
-type response = {
-  status : int;
-  headers : (string * string) list;
-  body : string;
-}
+type response = {status : int; headers : (string * string) list; body : string}
 
 type bad_response =
   | RowError of int * Row.error
@@ -26,11 +22,9 @@ type bad_response =
   | JsonError of string
 
 type (_, _, _) card =
-  | One : ('table, 'a) Row.t -> ('table, 'a, [< `Select | `Mutation ]) card
-  | Many :
-      ('table, 'a) Row.t
-      -> ('table, 'a list, [< `Select | `Mutation ]) card
-  | Zero : ('table, unit, [< `Mutation ]) card
+  | One : ('table, 'a) Row.t -> ('table, 'a, [< `Select | `Mutation]) card
+  | Many : ('table, 'a) Row.t -> ('table, 'a list, [< `Select | `Mutation]) card
+  | Zero : ('table, unit, [< `Mutation]) card
 
 let select_decode : type card_a cap.
     ('table, card_a, cap) card -> string -> (card_a, bad_response) result =
@@ -56,13 +50,13 @@ let select_decode : type card_a cap.
 
 let accept_header_of_card : type card_a cap.
     ('table, card_a, cap) card -> (string * string) list = function
-  | One _ -> [ ("Accept", "application/vnd.pgrst.object+json") ]
-  | Many _ -> [ ("Accept", "application/json") ]
+  | One _ -> [("Accept", "application/vnd.pgrst.object+json")]
+  | Many _ -> [("Accept", "application/json")]
   | Zero -> []
 
 let prefer_header : type card_a cap.
-    query_type:[ `Select | `Mutation ] ->
-    ?on_conflict:[ `Error | `Upsert | `Ignore ] ->
+    query_type:[`Select | `Mutation] ->
+    ?on_conflict:[`Error | `Upsert | `Ignore] ->
     ('table, card_a, cap) card ->
     string * string =
  fun ~query_type ?on_conflict card ->
@@ -77,24 +71,24 @@ let prefer_header : type card_a cap.
     | Some `Upsert -> Some "resolution=merge-duplicates"
     | Some `Ignore -> Some "resolution=ignore-duplicates"
   and missing = Some "missing=default" in
-  [ return; resolution; missing ]
+  [return; resolution; missing]
   |> List.filter_map (fun x -> x)
   |> String.concat ","
   |> fun x -> ("Prefer", x)
 
-let get_headers (conn : conn) ~(query_type : [ `Select | `Mutation ])
-    ?(on_conflict : [ `Error | `Upsert | `Ignore ] option)
-    (response_card : ('table, 'card_a, [< `Select | `Mutation ]) card) :
+let get_headers (conn : conn) ~(query_type : [`Select | `Mutation])
+    ?(on_conflict : [`Error | `Upsert | `Ignore] option)
+    (response_card : ('table, 'card_a, [< `Select | `Mutation]) card) :
     (string * string) list =
   let token_headers = conn.headers () in
   let accept_headers = accept_header_of_card response_card in
   let prefer : (string * string) list =
-    [ prefer_header ?on_conflict ~query_type response_card ]
+    [prefer_header ?on_conflict ~query_type response_card]
   in
   let content_type =
     match query_type with
     | `Select -> []
-    | `Mutation -> [ ("Content-Type", "application/json") ]
+    | `Mutation -> [("Content-Type", "application/json")]
   in
   token_headers @ accept_headers @ prefer @ content_type
 
@@ -143,7 +137,7 @@ module type HTTP = sig
   type error
 
   val send :
-    meth:[ `GET | `POST | `PATCH | `DELETE ] ->
+    meth:[`GET | `POST | `PATCH | `DELETE] ->
     url:Uri.t ->
     headers:(string * string) list ->
     ?body:string ->
@@ -174,19 +168,19 @@ module Make (H : HTTP) = struct
   let is_error_status = fun status -> status >= 400
 
   let decode_response :
-      ('table, 'card_a, [< `Select | `Mutation ]) card ->
+      ('table, 'card_a, [< `Select | `Mutation]) card ->
       (response, H.error) result ->
       ('card_a, error) result =
    fun card response_res ->
     match response_res with
     | Error ioerror -> Error (IOError ioerror)
-    | Ok { status; _ } when is_error_status status -> Error (ErrorStatus status)
-    | Ok { body; _ } ->
+    | Ok {status; _} when is_error_status status -> Error (ErrorStatus status)
+    | Ok {body; _} ->
         select_decode card body
         |> Result.map_error (fun bad_response -> BadResponse bad_response)
 
   let select (conn : conn) ?(order : ('table, 'b) Row.t option)
-      (card : ('table, 'card_a, [ `Select ]) card) (where : 'table Filter.t)
+      (card : ('table, 'card_a, [`Select]) card) (where : 'table Filter.t)
       (table : 'table table) : ('card_a, error) result H.IO.t =
     let uri = build_uri ~table ?order ~where card conn in
     let open IOSyntax in
@@ -198,9 +192,9 @@ module Make (H : HTTP) = struct
     decode_response card response_res
 
   let insert (conn : conn)
-      ?(on_conflict : [ `Error | `Upsert | `Ignore ] = `Error)
-      ~(returning : ('table, 'card_a, [ `Mutation ]) card)
-      ?(order : ('table, 'b) Row.t option) (input : ('table, [ `Full ]) Input.t)
+      ?(on_conflict : [`Error | `Upsert | `Ignore] = `Error)
+      ~(returning : ('table, 'card_a, [`Mutation]) card)
+      ?(order : ('table, 'b) Row.t option) (input : ('table, [`Full]) Input.t)
       (table : 'table table) : ('card_a, error) result H.IO.t =
     let uri = build_uri ~table ?order returning conn in
     let open IOSyntax in
@@ -213,10 +207,10 @@ module Make (H : HTTP) = struct
     decode_response returning response_res
 
   let insert_batch (conn : conn)
-      ?(on_conflict : [ `Error | `Upsert | `Ignore ] = `Error)
-      ~(returning : ('table, 'card_a, [ `Mutation ]) card)
+      ?(on_conflict : [`Error | `Upsert | `Ignore] = `Error)
+      ~(returning : ('table, 'card_a, [`Mutation]) card)
       ?(order : ('table, 'b) Row.t option)
-      (inputs : ('table, [ `Full ]) Input.t list) (table : 'table table) :
+      (inputs : ('table, [`Full]) Input.t list) (table : 'table table) :
       ('card_a, error) result H.IO.t =
     let uri = build_uri ~table ?order returning conn in
     let open IOSyntax in
@@ -228,9 +222,9 @@ module Make (H : HTTP) = struct
     in
     decode_response returning response_res
 
-  let update (conn : conn) ~(returning : ('table, 'card_a, [ `Mutation ]) card)
+  let update (conn : conn) ~(returning : ('table, 'card_a, [`Mutation]) card)
       ?(order : ('table, 'b) Row.t option)
-      (input : ('table, [ `Partial ]) Input.t) (where : 'table Filter.t)
+      (input : ('table, [`Partial]) Input.t) (where : 'table Filter.t)
       (table : 'table table) : ('card_a, error) result H.IO.t =
     let uri = build_uri ~table ?order ~where returning conn in
     let open IOSyntax in
@@ -242,7 +236,7 @@ module Make (H : HTTP) = struct
     in
     decode_response returning response_res
 
-  let delete (conn : conn) ~(returning : ('table, 'card_a, [ `Mutation ]) card)
+  let delete (conn : conn) ~(returning : ('table, 'card_a, [`Mutation]) card)
       ?(order : ('table, 'b) Row.t option) (where : 'table Filter.t)
       (table : 'table table) : ('card_a, error) result H.IO.t =
     let uri = build_uri ~table ?order ~where returning conn in
