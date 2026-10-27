@@ -62,7 +62,7 @@ module Make : (H : HTTP) -> sig
   val insert :
     conn ->
     ?on_conflict:[ `Error | `Ignore | `Upsert ] ->
-    ?returning:('table, unit, [ `Mutation ]) card ->
+    returning:('table, unit, [ `Mutation ]) card ->
     ?order:('table, 'b) Row.t ->
     ('table, [ `Full ]) Input.t ->
     'table Col.BaseTypes.table ->
@@ -71,7 +71,7 @@ module Make : (H : HTTP) -> sig
   val insert_batch :
     conn ->
     ?on_conflict:[ `Error | `Ignore | `Upsert ] ->
-    ?returning:('table, unit, [ `Mutation ]) card ->
+    returning:('table, unit, [ `Mutation ]) card ->
     ?order:('table, 'b) Row.t ->
     ('table, [ `Full ]) Input.t list ->
     'table Col.BaseTypes.table ->
@@ -79,7 +79,7 @@ module Make : (H : HTTP) -> sig
 
   val update :
     conn ->
-    ?returning:('table, unit, [ `Mutation ]) card ->
+    returning:('table, unit, [ `Mutation ]) card ->
     ?order:('table, 'b) Row.t ->
     ('table, [ `Partial ]) Input.t ->
     'table Filter.t ->
@@ -88,7 +88,7 @@ module Make : (H : HTTP) -> sig
 
   val delete :
     conn ->
-    ?returning:('table, unit, [ `Mutation ]) card ->
+    returning:('table, unit, [ `Mutation ]) card ->
     ?order:('table, 'b) Row.t ->
     'table Filter.t ->
     'table Col.BaseTypes.table ->

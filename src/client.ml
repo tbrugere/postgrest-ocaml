@@ -198,7 +198,7 @@ module Make (H : HTTP) = struct
 
   let insert (conn : conn)
       ?(on_conflict : [ `Error | `Upsert | `Ignore ] = `Error)
-      ?(returning : ('table, 'card_a, [ `Mutation ]) card = Zero)
+      ~(returning : ('table, 'card_a, [ `Mutation ]) card)
       ?(order : ('table, 'b) Row.t option) (input : ('table, [ `Full ]) Input.t)
       (table : 'table table) : ('card_a, error) result H.IO.t =
     let uri = build_uri ~table ?order returning conn in
@@ -213,7 +213,7 @@ module Make (H : HTTP) = struct
 
   let insert_batch (conn : conn)
       ?(on_conflict : [ `Error | `Upsert | `Ignore ] = `Error)
-      ?(returning : ('table, 'card_a, [ `Mutation ]) card = Zero)
+      ~(returning : ('table, 'card_a, [ `Mutation ]) card)
       ?(order : ('table, 'b) Row.t option)
       (inputs : ('table, [ `Full ]) Input.t list) (table : 'table table) :
       ('card_a, error) result H.IO.t =
@@ -228,7 +228,7 @@ module Make (H : HTTP) = struct
     decode_response returning response_res
 
   let update (conn : conn)
-      ?(returning : ('table, 'card_a, [ `Mutation ]) card = Zero)
+      ~(returning : ('table, 'card_a, [ `Mutation ]) card)
       ?(order : ('table, 'b) Row.t option)
       (input : ('table, [ `Partial ]) Input.t) (where : 'table Filter.t)
       (table : 'table table) : ('card_a, error) result H.IO.t =
@@ -243,7 +243,7 @@ module Make (H : HTTP) = struct
     decode_response returning response_res
 
   let delete (conn : conn)
-      ?(returning : ('table, 'card_a, [ `Mutation ]) card = Zero)
+      ~(returning : ('table, 'card_a, [ `Mutation ]) card)
       ?(order : ('table, 'b) Row.t option) (where : 'table Filter.t)
       (table : 'table table) : ('card_a, error) result H.IO.t =
     let uri = build_uri ~table ?order ~where returning conn in
