@@ -93,13 +93,13 @@ let encode (t: 'table t): string * string =
     param_text, value
 
 
+(** 
+    makes a single filter into a list, flattening And () filters.
+    useful for passing ``?col1=eq.1&col2=eq.2&col3=eq.3``
+    instead of  ``?and=(col1.eq.1,col2.eq.2,col3.eq.3)`` 
+    when building filters using the Syntax module
+ *)
 let as_filter_list = function
-    (** 
-        makes a single filter into a list, flattening And () filters.
-        useful for passing ``?col1=eq.1&col2=eq.2&col3=eq.3``
-        instead of  ``?and=(col1.eq.1,col2.eq.2,col3.eq.3)`` 
-        when building filters using the Syntax module
-     *)
     | And l -> l
     | filter -> [filter]
 ;;
