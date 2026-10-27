@@ -1,10 +1,7 @@
-type conn = { 
-  base_url : Uri.t; 
-  headers: unit -> (string * string) list ;
-}
+type conn = { base_url : Uri.t; headers : unit -> (string * string) list }
 
-
-val supabase_conn: Uri.t -> apikey: string -> token : (unit -> string option) -> conn
+val supabase_conn :
+  Uri.t -> apikey:string -> token:(unit -> string option) -> conn
 
 type response = {
   status : int;
@@ -12,7 +9,10 @@ type response = {
   body : string;
 }
 
-type bad_response = RowError of int * Row.error | ExpectedArray | JsonError of string
+type bad_response =
+  | RowError of int * Row.error
+  | ExpectedArray
+  | JsonError of string
 
 type (_, _, _) card =
   | One : ('table, 'a) Row.t -> ('table, 'a, [< `Mutation | `Select ]) card

@@ -31,11 +31,11 @@ let decode_base : type a. a base -> json -> (a option, error) result =
       | _ -> Error WrongType
       end
   | JSON, a -> Ok (Some a)
-  | Enum enum, `String s -> begin match enum.of_string s with
-    | Some e -> Ok (Some e)
-    | None -> Error WrongType
-  end
-
+  | Enum enum, `String s ->
+      begin match enum.of_string s with
+      | Some e -> Ok (Some e)
+      | None -> Error WrongType
+      end
   | _ -> Error WrongType
 
 let decode_type : type a. a ty -> json -> (a, error) result =
@@ -103,15 +103,18 @@ let pair (row1 : ('table, 'a) t) (row2 : ('table, 'b) t) : ('table, 'a * 'b) t =
   }
 
 let encode_column_list (row : ('table, 'a) t) : string =
-  let rec encode_columns (columns: columninfo list) : string = 
+  let rec encode_columns (columns : columninfo list) : string =
     columns
-    |> List.map (function 
-      | Name name  -> Url.escape name
-      | Relationship (name, inner_columns) -> encode_relationship name inner_columns)
+    |> List.map (function
+      | Name name -> Url.escape name
+      | Relationship (name, inner_columns) ->
+          encode_relationship name inner_columns)
     |> String.concat ","
-  and encode_relationship (name: string) (inner_columns: columninfo list) : string =
+  and encode_relationship (name : string) (inner_columns : columninfo list) :
+      string =
     {%string|%{Url.escape name}(%{encode_columns inner_columns})|}
-  in encode_columns row.columns
+  in
+  encode_columns row.columns
 
 module Syntax = struct
   let ( let+ ) row f = map f row

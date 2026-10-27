@@ -1,21 +1,18 @@
 open Col.BaseTypes
 open Util
 
-type conn = { 
-  base_url : Uri.t; 
-  headers: unit -> (string * string) list ;
-}
+type conn = { base_url : Uri.t; headers : unit -> (string * string) list }
 
-
-let supabase_conn (base_url: Uri.t) ~(apikey: string) ~(token : unit -> string option) =
+let supabase_conn (base_url : Uri.t) ~(apikey : string)
+    ~(token : unit -> string option) =
   let headers () =
-    let apikey_header = ["apikey", apikey] in
+    let apikey_header = [ ("apikey", apikey) ] in
     match token () with
     | None -> apikey_header
-    | Some token -> ("Authorization", {%string|Bearer %{token}|})::apikey_header
+    | Some token ->
+        ("Authorization", {%string|Bearer %{token}|}) :: apikey_header
   in
-  {base_url; headers}
-
+  { base_url; headers }
 
 type response = {
   status : int;
@@ -23,7 +20,10 @@ type response = {
   body : string;
 }
 
-type bad_response = RowError of int * Row.error | ExpectedArray | JsonError of string
+type bad_response =
+  | RowError of int * Row.error
+  | ExpectedArray
+  | JsonError of string
 
 type (_, _, _) card =
   | One : ('table, 'a) Row.t -> ('table, 'a, [< `Select | `Mutation ]) card
@@ -82,18 +82,19 @@ let prefer_header : type card_a cap.
   |> String.concat ","
   |> fun x -> ("Prefer", x)
 
-let get_headers (conn: conn) ~(query_type : [ `Select | `Mutation ])
+let get_headers (conn : conn) ~(query_type : [ `Select | `Mutation ])
     ?(on_conflict : [ `Error | `Upsert | `Ignore ] option)
     (response_card : ('table, 'card_a, [< `Select | `Mutation ]) card) :
     (string * string) list =
-  let token_headers = conn.headers () in 
+  let token_headers = conn.headers () in
   let accept_headers = accept_header_of_card response_card in
   let prefer : (string * string) list =
     [ prefer_header ?on_conflict ~query_type response_card ]
   in
-  let content_type = match query_type with
-  | `Select -> []
-  | `Mutation -> ["Content-Type", "application/json"]
+  let content_type =
+    match query_type with
+    | `Select -> []
+    | `Mutation -> [ ("Content-Type", "application/json") ]
   in
   token_headers @ accept_headers @ prefer @ content_type
 
@@ -227,8 +228,7 @@ module Make (H : HTTP) = struct
     in
     decode_response returning response_res
 
-  let update (conn : conn)
-      ~(returning : ('table, 'card_a, [ `Mutation ]) card)
+  let update (conn : conn) ~(returning : ('table, 'card_a, [ `Mutation ]) card)
       ?(order : ('table, 'b) Row.t option)
       (input : ('table, [ `Partial ]) Input.t) (where : 'table Filter.t)
       (table : 'table table) : ('card_a, error) result H.IO.t =
@@ -242,8 +242,7 @@ module Make (H : HTTP) = struct
     in
     decode_response returning response_res
 
-  let delete (conn : conn)
-      ~(returning : ('table, 'card_a, [ `Mutation ]) card)
+  let delete (conn : conn) ~(returning : ('table, 'card_a, [ `Mutation ]) card)
       ?(order : ('table, 'b) Row.t option) (where : 'table Filter.t)
       (table : 'table table) : ('card_a, error) result H.IO.t =
     let uri = build_uri ~table ?order ~where returning conn in
