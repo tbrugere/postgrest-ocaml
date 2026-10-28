@@ -12,7 +12,7 @@ end
 type error = string
 
 type request = {
-  meth : [ `DELETE | `GET | `PATCH | `POST ];
+  meth : [`DELETE | `GET | `PATCH | `POST];
   url : Uri.t;
   headers : (string * string) list;
   body : string option;
@@ -24,7 +24,7 @@ let responder : (request -> (Postgrest.Client.response, error) result) ref =
   ref (fun _ -> Error "no responder installed")
 
 let send ~meth ~url ~headers ?body () =
-  let request = { meth; url; headers; body } in
+  let request = {meth; url; headers; body} in
   requests := request :: !requests;
   !responder request
 
@@ -40,7 +40,7 @@ let last () =
   | r :: _ -> r
 
 let respond ?(status = 200) ?(headers = []) body =
-  responder := fun _ -> Ok { Postgrest.Client.status; headers; body }
+  responder := fun _ -> Ok {Postgrest.Client.status; headers; body}
 
 let fail_with (e : error) = responder := fun _ -> Error e
 

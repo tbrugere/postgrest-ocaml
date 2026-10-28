@@ -13,7 +13,7 @@ module C = Client.Make (Mock_http)
 
 (* A plain PostgREST, as the fixtures were recorded: no gateway, no keys. *)
 let base_url = Uri.of_string "http://localhost:3000"
-let conn : Client.conn = { base_url; headers = (fun () -> []) }
+let conn : Client.conn = {base_url; headers = (fun () -> [])}
 
 (* ---------- testables ---------- *)
 
@@ -79,11 +79,10 @@ let plant_json (p : plant) =
       ("tags", opt Fun.id p.tags);
     ]
 
-let id_name_json (r : id_name) =
-  `Assoc [ ("id", str r.id); ("name", str r.name) ]
+let id_name_json (r : id_name) = `Assoc [("id", str r.id); ("name", str r.name)]
 
 let obs_id_note_json (o : obs_id_note) =
-  `Assoc [ ("id", str o.id); ("note", opt str o.note) ]
+  `Assoc [("id", str o.id); ("note", opt str o.note)]
 
 let plant_with_obs_json (p : plant_with_obs) =
   let obs = List.sort (fun (a : obs_id_note) b -> compare a.id b.id) p.obs in
@@ -282,13 +281,13 @@ let filter_tests =
       fun () ->
         check_param "in"
           ("status", "in.(active,archived)")
-          (In (Plants.status, [ Active; Archived ])) );
+          (In (Plants.status, [Active; Archived])) );
     ( "in list quotes an element with a comma",
       `Quick,
       fun () ->
         check_param "in"
           ("name", "in.(\"Plante, inconnue\",Arnica)")
-          (In (Plants.name, [ "Plante, inconnue"; "Arnica" ])) );
+          (In (Plants.name, ["Plante, inconnue"; "Arnica"])) );
     ( "any",
       `Quick,
       fun () ->
@@ -296,13 +295,13 @@ let filter_tests =
           ("scientific_name", "eq(any).{Arnica montana,Gentiana lutea}")
           (Eq
              ( Plants.scientific_name,
-               Any [ Some "Arnica montana"; Some "Gentiana lutea" ] )) );
+               Any [Some "Arnica montana"; Some "Gentiana lutea"] )) );
     ( "any quotes an element with a comma",
       `Quick,
       fun () ->
         check_param "any"
           ("name", "eq(any).{\"Plante, inconnue\",Arnica}")
-          (Eq (Plants.name, Any [ "Plante, inconnue"; "Arnica" ])) );
+          (Eq (Plants.name, Any ["Plante, inconnue"; "Arnica"])) );
     ( "or tree",
       `Quick,
       fun () ->
@@ -382,7 +381,7 @@ let row_tests =
       `Quick,
       fun () ->
         check_row "ok" ~to_json:id_name_json
-          (Ok { id = "x"; name = "Arnica" })
+          (Ok {id = "x"; name = "Arnica"})
           id_name_row {|{"id":"x","name":"Arnica","extra":1}|} );
     ( "missing field",
       `Quick,
@@ -408,7 +407,7 @@ let row_tests =
       `Quick,
       fun () ->
         check_row "nulls" ~to_json:obs_id_note_json
-          (Ok { id = "o"; note = None })
+          (Ok {id = "o"; note = None})
           obs_id_note_row {|{"id":"o","note":null}|} );
     ( "numeric column given a JSON integer",
       `Quick,
@@ -453,7 +452,7 @@ let row_tests =
       fun () ->
         let row = Row.col Plants.tags in
         check_row "json" ~to_json:(opt Fun.id)
-          (Ok (Some (`Assoc [ ("a", `Int 1) ])))
+          (Ok (Some (`Assoc [("a", `Int 1)])))
           row {|{"tags":{"a":1}}|} );
     ( "embedded many",
       `Quick,
@@ -463,8 +462,7 @@ let row_tests =
              {
                id = "p";
                name = "n";
-               obs =
-                 [ { id = "o1"; note = Some "x" }; { id = "o2"; note = None } ];
+               obs = [{id = "o1"; note = Some "x"}; {id = "o2"; note = None}];
              })
           plant_with_obs_row
           {|{"id":"p","name":"n","observations":[{"id":"o1","note":"x"},{"id":"o2","note":null}]}|}
@@ -473,13 +471,13 @@ let row_tests =
       `Quick,
       fun () ->
         check_row "empty" ~to_json:plant_with_obs_json
-          (Ok { id = "p"; name = "n"; obs = [] })
+          (Ok {id = "p"; name = "n"; obs = []})
           plant_with_obs_row {|{"id":"p","name":"n","observations":[]}|} );
     ( "embedded exactly one",
       `Quick,
       fun () ->
         check_row "one" ~to_json:obs_with_plant_json
-          (Ok { id = "o"; note = None; plant = { id = "p"; name = "n" } })
+          (Ok {id = "o"; note = None; plant = {id = "p"; name = "n"}})
           obs_with_plant_row
           {|{"id":"o","note":null,"plants":{"id":"p","name":"n"}}|} );
     ( "embedded exactly one given null",
@@ -505,7 +503,7 @@ let input_tests =
     ( "full row",
       `Quick,
       fun () ->
-        let i : (plants, [ `Full ]) Input.t =
+        let i : (plants, [`Full]) Input.t =
           {
             fields =
               [
@@ -528,7 +526,7 @@ let input_tests =
     ( "partial row: unspecified dropped, Value None is null",
       `Quick,
       fun () ->
-        let i : (plants, [ `Partial ]) Input.t =
+        let i : (plants, [`Partial]) Input.t =
           {
             fields =
               [
@@ -541,12 +539,12 @@ let input_tests =
         in
         Alcotest.(check yojson)
           "json"
-          (`Assoc [ ("rating", `Int 4); ("scientific_name", `Null) ])
+          (`Assoc [("rating", `Int 4); ("scientific_name", `Null)])
           (input_json i) );
     ( "enum and timestamp values",
       `Quick,
       fun () ->
-        let i : (plants, [ `Partial ]) Input.t =
+        let i : (plants, [`Partial]) Input.t =
           {
             fields =
               [
@@ -567,7 +565,7 @@ let input_tests =
     ( "batch is a JSON array",
       `Quick,
       fun () ->
-        let one : (plants, [ `Full ]) Input.t =
+        let one : (plants, [`Full]) Input.t =
           {
             fields =
               [
@@ -578,8 +576,8 @@ let input_tests =
         in
         Alcotest.(check yojson)
           "json"
-          (`List [ `Assoc [ ("id", `String "x"); ("name", `String "n") ] ])
-          (Yojson.Safe.from_string (Input.list_to_json_string [ one ])) );
+          (`List [`Assoc [("id", `String "x"); ("name", `String "n")]])
+          (Yojson.Safe.from_string (Input.list_to_json_string [one])) );
   ]
 
 (* ---------- headers and transport-level behaviour ---------- *)
@@ -644,7 +642,7 @@ let header_tests =
       fun () ->
         Mock_http.reset ();
         Mock_http.respond ~status:201 "";
-        let input : (plants, [ `Full ]) Input.t =
+        let input : (plants, [`Full]) Input.t =
           {
             fields =
               Input.
@@ -654,7 +652,7 @@ let header_tests =
                 ];
           }
         in
-        let _ = C.insert conn input Plants.table in
+        let _ = C.insert conn ~returning:Zero input Plants.table in
         Alcotest.(check (option string))
           "Content-Type" (Some "application/json")
           (Mock_http.header "Content-Type" (Mock_http.last ())) );
@@ -678,10 +676,7 @@ let header_tests =
         Mock_http.reset ();
         Mock_http.respond "[]";
         let conn =
-          {
-            conn with
-            base_url = Uri.of_string "https://xyz.supabase.co/rest/v1";
-          }
+          {conn with base_url = Uri.of_string "https://xyz.supabase.co/rest/v1"}
         in
         let _ = C.select conn (Many id_name_row) all Plants.table in
         Alcotest.(check string)
@@ -732,7 +727,7 @@ let select_scenarios =
       `Quick,
       fun () ->
         check_result "rows" ~to_json:(list plant_json)
-          (ok [ arnica; gentiane; inconnue ])
+          (ok [arnica; gentiane; inconnue])
           (replay "select_all_plants" (fun () ->
                C.select conn ~order:(Row.col Plants.name) (Many plant_row) all
                  Plants.table)) );
@@ -740,7 +735,7 @@ let select_scenarios =
       `Quick,
       fun () ->
         check_result "row" ~to_json:id_name_json
-          (ok { id = uuid 1; name = "Arnica" })
+          (ok {id = uuid 1; name = "Arnica"})
           (replay "select_one_plant" (fun () ->
                C.select conn (One id_name_row) (where_id 1) Plants.table)) );
     ( "select_one_missing",
@@ -753,7 +748,7 @@ let select_scenarios =
       `Quick,
       fun () ->
         check_result "rows" ~to_json:(list id_name_json)
-          (ok [ { id = uuid 1; name = "Arnica" } ])
+          (ok [{id = uuid 1; name = "Arnica"}])
           (replay "select_eq_with_space" (fun () ->
                C.select conn (Many id_name_row)
                  Filter.(
@@ -763,7 +758,7 @@ let select_scenarios =
       `Quick,
       fun () ->
         check_result "rows" ~to_json:(list id_name_json)
-          (ok [ { id = uuid 3; name = "Plante, inconnue" } ])
+          (ok [{id = uuid 3; name = "Plante, inconnue"}])
           (replay "select_eq_with_comma" (fun () ->
                C.select conn (Many id_name_row)
                  Filter.(Eq (Plants.name, Value "Plante, inconnue"))
@@ -777,13 +772,13 @@ let select_scenarios =
           (id, status)
         in
         let to_json (id, s) =
-          `Assoc [ ("id", str id); ("status", status_json s) ]
+          `Assoc [("id", str id); ("status", status_json s)]
         in
         check_result "rows" ~to_json:(list to_json)
-          (ok [ (uuid 1, Active); (uuid 2, Active); (uuid 3, Archived) ])
+          (ok [(uuid 1, Active); (uuid 2, Active); (uuid 3, Archived)])
           (replay "select_in_enum" (fun () ->
                C.select conn ~order:(Row.col Plants.id) (Many row)
-                 Filter.(In (Plants.status, [ Active; Archived ]))
+                 Filter.(In (Plants.status, [Active; Archived]))
                  Plants.table)) );
     ( "select_in_with_quoted_comma",
       `Quick,
@@ -791,12 +786,12 @@ let select_scenarios =
         check_result "rows" ~to_json:(list id_name_json)
           (ok
              [
-               { id = uuid 1; name = "Arnica" };
-               { id = uuid 3; name = "Plante, inconnue" };
+               {id = uuid 1; name = "Arnica"};
+               {id = uuid 3; name = "Plante, inconnue"};
              ])
           (replay "select_in_with_quoted_comma" (fun () ->
                C.select conn ~order:(Row.col Plants.id) (Many id_name_row)
-                 Filter.(In (Plants.name, [ "Plante, inconnue"; "Arnica" ]))
+                 Filter.(In (Plants.name, ["Plante, inconnue"; "Arnica"]))
                  Plants.table)) );
     ( "select_or",
       `Quick,
@@ -804,8 +799,8 @@ let select_scenarios =
         check_result "rows" ~to_json:(list id_name_json)
           (ok
              [
-               { id = uuid 1; name = "Arnica" };
-               { id = uuid 2; name = "Gentiane jaune" };
+               {id = uuid 1; name = "Arnica"};
+               {id = uuid 2; name = "Gentiane jaune"};
              ])
           (replay "select_or" (fun () ->
                C.select conn ~order:(Row.col Plants.id) (Many id_name_row)
@@ -820,9 +815,9 @@ let select_scenarios =
       `Quick,
       fun () ->
         check_result "rows" ~to_json:(list id_name_json)
-          (ok [ { id = uuid 1; name = "Arnica" } ])
+          (ok [{id = uuid 1; name = "Arnica"}])
           (replay "select_and_in_tree"
-             ~params:[ "rating=not.is.null"; "name=like.A*"; "select=id,name" ]
+             ~params:["rating=not.is.null"; "name=like.A*"; "select=id,name"]
              (fun () ->
                C.select conn (Many id_name_row)
                  Filter.(
@@ -836,7 +831,7 @@ let select_scenarios =
       `Quick,
       fun () ->
         check_result "rows" ~to_json:(list id_name_json)
-          (ok [ { id = uuid 3; name = "Plante, inconnue" } ])
+          (ok [{id = uuid 3; name = "Plante, inconnue"}])
           (replay "select_not_or" (fun () ->
                C.select conn (Many id_name_row)
                  Filter.(
@@ -853,8 +848,8 @@ let select_scenarios =
         check_result "rows" ~to_json:(list id_name_json)
           (ok
              [
-               { id = uuid 1; name = "Arnica" };
-               { id = uuid 2; name = "Gentiane jaune" };
+               {id = uuid 1; name = "Arnica"};
+               {id = uuid 2; name = "Gentiane jaune"};
              ])
           (replay "select_nested_tree"
              ~params:
@@ -882,8 +877,8 @@ let select_scenarios =
         check_result "rows" ~to_json:(list id_name_json)
           (ok
              [
-               { id = uuid 1; name = "Arnica" };
-               { id = uuid 3; name = "Plante, inconnue" };
+               {id = uuid 1; name = "Arnica"};
+               {id = uuid 3; name = "Plante, inconnue"};
              ])
           (replay "select_tree_value_with_comma" (fun () ->
                C.select conn ~order:(Row.col Plants.id) (Many id_name_row)
@@ -900,15 +895,15 @@ let select_scenarios =
         check_result "rows" ~to_json:(list id_name_json)
           (ok
              [
-               { id = uuid 1; name = "Arnica" };
-               { id = uuid 2; name = "Gentiane jaune" };
+               {id = uuid 1; name = "Arnica"};
+               {id = uuid 2; name = "Gentiane jaune"};
              ])
           (replay "select_any" (fun () ->
                C.select conn ~order:(Row.col Plants.id) (Many id_name_row)
                  Filter.(
                    Eq
                      ( Plants.scientific_name,
-                       Any [ Some "Arnica montana"; Some "Gentiana lutea" ] ))
+                       Any [Some "Arnica montana"; Some "Gentiana lutea"] ))
                  Plants.table)) );
     ( "select_any_quoted",
       `Quick,
@@ -916,12 +911,12 @@ let select_scenarios =
         check_result "rows" ~to_json:(list id_name_json)
           (ok
              [
-               { id = uuid 1; name = "Arnica" };
-               { id = uuid 3; name = "Plante, inconnue" };
+               {id = uuid 1; name = "Arnica"};
+               {id = uuid 3; name = "Plante, inconnue"};
              ])
           (replay "select_any_quoted" (fun () ->
                C.select conn ~order:(Row.col Plants.id) (Many id_name_row)
-                 Filter.(Eq (Plants.name, Any [ "Plante, inconnue"; "Arnica" ]))
+                 Filter.(Eq (Plants.name, Any ["Plante, inconnue"; "Arnica"]))
                  Plants.table)) );
     ( "select_is_null",
       `Quick,
@@ -931,11 +926,9 @@ let select_scenarios =
           let+ id = Row.col Plants.id and+ rating = Row.col Plants.rating in
           (id, rating)
         in
-        let to_json (id, r) =
-          `Assoc [ ("id", str id); ("rating", opt int r) ]
-        in
+        let to_json (id, r) = `Assoc [("id", str id); ("rating", opt int r)] in
         check_result "rows" ~to_json:(list to_json)
-          (ok [ (uuid 2, None) ])
+          (ok [(uuid 2, None)])
           (replay "select_is_null" (fun () ->
                C.select conn (Many row)
                  Filter.(Is (Plants.rating, Value None))
@@ -948,11 +941,9 @@ let select_scenarios =
           let+ id = Row.col Plants.id and+ rating = Row.col Plants.rating in
           (id, rating)
         in
-        let to_json (id, r) =
-          `Assoc [ ("id", str id); ("rating", opt int r) ]
-        in
+        let to_json (id, r) = `Assoc [("id", str id); ("rating", opt int r)] in
         check_result "rows" ~to_json:(list to_json)
-          (ok [ (uuid 1, Some 5); (uuid 3, Some 2) ])
+          (ok [(uuid 1, Some 5); (uuid 3, Some 2)])
           (replay "select_not_is_null" (fun () ->
                C.select conn ~order:(Row.col Plants.id) (Many row)
                  Filter.(Not (Is (Plants.rating, Value None)))
@@ -966,10 +957,10 @@ let select_scenarios =
           (id, h)
         in
         let to_json (id, h) =
-          `Assoc [ ("id", str id); ("height_cm", opt float h) ]
+          `Assoc [("id", str id); ("height_cm", opt float h)]
         in
         check_result "rows" ~to_json:(list to_json)
-          (ok [ (uuid 2, Some 120.) ])
+          (ok [(uuid 2, Some 120.)])
           (replay "select_numeric_gt" (fun () ->
                C.select conn (Many row)
                  Filter.(Gt (Plants.height_cm, Value (Some 30.5)))
@@ -983,10 +974,10 @@ let select_scenarios =
           (id, h)
         in
         let to_json (id, h) =
-          `Assoc [ ("id", str id); ("height_cm", opt float h) ]
+          `Assoc [("id", str id); ("height_cm", opt float h)]
         in
         check_result "rows" ~to_json:(list to_json)
-          (ok [ (uuid 1, Some 30.5); (uuid 2, Some 120.) ])
+          (ok [(uuid 1, Some 30.5); (uuid 2, Some 120.)])
           (replay "select_numeric_gte" (fun () ->
                C.select conn ~order:(Row.col Plants.id) (Many row)
                  Filter.(Gte (Plants.height_cm, Value (Some 30.5)))
@@ -1001,7 +992,7 @@ let select_scenarios =
           (id, t)
         in
         let to_json (id, t) =
-          `Assoc [ ("id", str id); ("taken_at", time_json t) ]
+          `Assoc [("id", str id); ("taken_at", time_json t)]
         in
         check_result "rows" ~to_json:(list to_json)
           (ok
@@ -1025,10 +1016,10 @@ let select_scenarios =
           (id, s)
         in
         let to_json (id, s) =
-          `Assoc [ ("id", str id); ("status", status_json s) ]
+          `Assoc [("id", str id); ("status", status_json s)]
         in
         check_result "rows" ~to_json:(list to_json)
-          (ok [ (uuid 3, Archived) ])
+          (ok [(uuid 3, Archived)])
           (replay "select_enum_eq" (fun () ->
                C.select conn (Many row)
                  Filter.(Eq (Plants.status, Value Archived))
@@ -1041,11 +1032,9 @@ let select_scenarios =
           let+ id = Row.col Plants.id and+ b = Row.col Plants.is_native in
           (id, b)
         in
-        let to_json (id, b) =
-          `Assoc [ ("id", str id); ("is_native", `Bool b) ]
-        in
+        let to_json (id, b) = `Assoc [("id", str id); ("is_native", `Bool b)] in
         check_result "rows" ~to_json:(list to_json)
-          (ok [ (uuid 1, true); (uuid 2, true) ])
+          (ok [(uuid 1, true); (uuid 2, true)])
           (replay "select_bool_eq" (fun () ->
                C.select conn ~order:(Row.col Plants.id) (Many row)
                  Filter.(Eq (Plants.is_native, Value true))
@@ -1054,7 +1043,7 @@ let select_scenarios =
       `Quick,
       fun () ->
         check_result "rows" ~to_json:(list id_name_json)
-          (ok [ { id = uuid 2; name = "Gentiane jaune" } ])
+          (ok [{id = uuid 2; name = "Gentiane jaune"}])
           (replay "select_like" (fun () ->
                C.select conn ~order:(Row.col Plants.id) (Many id_name_row)
                  Filter.(Like (Plants.name, Value "*ane*"))
@@ -1063,7 +1052,7 @@ let select_scenarios =
       `Quick,
       fun () ->
         check_result "rows" ~to_json:(list id_name_json)
-          (ok [ { id = uuid 1; name = "Arnica" } ])
+          (ok [{id = uuid 1; name = "Arnica"}])
           (replay "select_ilike" (fun () ->
                C.select conn (Many id_name_row)
                  Filter.(ILike (Plants.name, Value "*ARNICA*"))
@@ -1076,11 +1065,9 @@ let select_scenarios =
           let+ id = Row.col Plants.id and+ tags = Row.col Plants.tags in
           (id, tags)
         in
-        let to_json (id, t) =
-          `Assoc [ ("id", str id); ("tags", opt Fun.id t) ]
-        in
+        let to_json (id, t) = `Assoc [("id", str id); ("tags", opt Fun.id t)] in
         check_result "rows" ~to_json:(list to_json)
-          (ok [ (uuid 1, arnica.tags) ])
+          (ok [(uuid 1, arnica.tags)])
           (replay "select_jsonb" (fun () ->
                C.select conn (Many row) (where_id 1) Plants.table)) );
     ( "select_embed_many",
@@ -1094,8 +1081,8 @@ let select_scenarios =
                  name = "Arnica";
                  obs =
                    [
-                     { id = obs_uuid 1; note = Some "En fleur" };
-                     { id = obs_uuid 2; note = None };
+                     {id = obs_uuid 1; note = Some "En fleur"};
+                     {id = obs_uuid 2; note = None};
                    ];
                };
              ])
@@ -1112,10 +1099,10 @@ let select_scenarios =
           (id, obs)
         in
         let to_json (id, obs) =
-          `Assoc [ ("id", str id); ("observations", list str obs) ]
+          `Assoc [("id", str id); ("observations", list str obs)]
         in
         check_result "rows" ~to_json:(list to_json)
-          (ok [ (uuid 2, [ obs_uuid 3 ]) ])
+          (ok [(uuid 2, [obs_uuid 3])])
           (replay "select_embed_many_empty" (fun () ->
                C.select conn (Many row) (where_id 2) Plants.table)) );
     ( "select_embed_to_one",
@@ -1127,7 +1114,7 @@ let select_scenarios =
                {
                  id = obs_uuid 1;
                  note = Some "En fleur";
-                 plant = { id = uuid 1; name = "Arnica" };
+                 plant = {id = uuid 1; name = "Arnica"};
                };
              ])
           (replay "select_embed_to_one" (fun () ->
@@ -1137,7 +1124,7 @@ let select_scenarios =
     ( "select_bad_column",
       `Quick,
       fun () ->
-        let row = Row.col { Col.ty = Not_Null Str; name = "nope" } in
+        let row = Row.col {Col.ty = Not_Null Str; name = "nope"} in
         check_result "400" ~to_json:(list str) (Error (C.ErrorStatus 400))
           (replay "select_bad_column" (fun () ->
                C.select conn (Many row) all Plants.table)) );
@@ -1150,7 +1137,7 @@ let select_scenarios =
                C.select conn (Many (Row.col Plants.id)) all table)) );
   ]
 
-let new_plant : (plants, [ `Full ]) Input.t =
+let new_plant : (plants, [`Full]) Input.t =
   {
     fields =
       Input.
@@ -1163,7 +1150,7 @@ let new_plant : (plants, [ `Full ]) Input.t =
         ];
   }
 
-let other_plant : (plants, [ `Full ]) Input.t =
+let other_plant : (plants, [`Full]) Input.t =
   {
     fields =
       Input.
@@ -1183,7 +1170,7 @@ let decode_body name row =
   | `List l ->
       List.map (Row.decode row) l
       |> List.map (Result.map_error string_of_row_error)
-  | j -> [ Row.decode row j |> Result.map_error string_of_row_error ]
+  | j -> [Row.decode row j |> Result.map_error string_of_row_error]
 
 let mutation_scenarios =
   [
@@ -1192,11 +1179,11 @@ let mutation_scenarios =
       fun () ->
         check_result "unit" ~to_json:unit (ok ())
           (replay "insert_minimal" (fun () ->
-               C.insert conn new_plant Plants.table)) );
+               C.insert conn ~returning:Zero new_plant Plants.table)) );
     ( "insert_duplicate_error",
       `Quick,
       fun () ->
-        let dup : (plants, [ `Full ]) Input.t =
+        let dup : (plants, [`Full]) Input.t =
           {
             fields =
               Input.
@@ -1209,11 +1196,11 @@ let mutation_scenarios =
         in
         check_result "409" ~to_json:unit (Error (C.ErrorStatus 409))
           (replay "insert_duplicate_error" (fun () ->
-               C.insert conn dup Plants.table)) );
+               C.insert conn ~returning:Zero dup Plants.table)) );
     ( "insert_batch_minimal",
       `Quick,
       fun () ->
-        let first : (plants, [ `Full ]) Input.t =
+        let first : (plants, [`Full]) Input.t =
           {
             fields =
               Input.
@@ -1227,17 +1214,19 @@ let mutation_scenarios =
         in
         check_result "unit" ~to_json:unit (ok ())
           (replay "insert_batch_minimal" (fun () ->
-               C.insert_batch conn [ first; other_plant ] Plants.table)) );
+               C.insert_batch conn ~returning:Zero [first; other_plant]
+                 Plants.table)) );
     ( "insert_batch_mismatched_keys is a 400 from PostgREST",
       `Quick,
       fun () ->
         check_result "400" ~to_json:unit (Error (C.ErrorStatus 400))
           (replay "insert_batch_mismatched_keys" (fun () ->
-               C.insert_batch conn [ new_plant; other_plant ] Plants.table)) );
+               C.insert_batch conn ~returning:Zero [new_plant; other_plant]
+                 Plants.table)) );
     ( "upsert_merge_minimal",
       `Quick,
       fun () ->
-        let row : (plants, [ `Full ]) Input.t =
+        let row : (plants, [`Full]) Input.t =
           {
             fields =
               Input.
@@ -1251,11 +1240,12 @@ let mutation_scenarios =
         in
         check_result "unit" ~to_json:unit (ok ())
           (replay "upsert_merge_minimal" (fun () ->
-               C.insert conn ~on_conflict:`Upsert row Plants.table)) );
+               C.insert conn ~returning:Zero ~on_conflict:`Upsert row
+                 Plants.table)) );
     ( "upsert_ignore_minimal",
       `Quick,
       fun () ->
-        let row : (plants, [ `Full ]) Input.t =
+        let row : (plants, [`Full]) Input.t =
           {
             fields =
               Input.
@@ -1268,7 +1258,8 @@ let mutation_scenarios =
         in
         check_result "unit" ~to_json:unit (ok ())
           (replay "upsert_ignore_minimal" (fun () ->
-               C.insert conn ~on_conflict:`Ignore row Plants.table)) );
+               C.insert conn ~returning:Zero ~on_conflict:`Ignore row
+                 Plants.table)) );
     ( "insert_returning_object (decode only)",
       `Quick,
       fun () ->
@@ -1292,7 +1283,7 @@ let mutation_scenarios =
           [
             Ok
               (to_json
-                 ( { id = uuid 4; name = "Nouvelle" },
+                 ( {id = uuid 4; name = "Nouvelle"},
                    Active,
                    ptime "2026-01-01T00:00:00Z" ));
           ]
@@ -1304,8 +1295,8 @@ let mutation_scenarios =
         Alcotest.(check (list (result yojson string)))
           "decoded"
           [
-            Ok (id_name_json { id = uuid 4; name = "Nouvelle" });
-            Ok (id_name_json { id = uuid 5; name = "Autre" });
+            Ok (id_name_json {id = uuid 4; name = "Nouvelle"});
+            Ok (id_name_json {id = uuid 5; name = "Autre"});
           ]
           (decode_body "insert_batch_returning_array" id_name_row
           |> List.map (Result.map id_name_json)) );
@@ -1318,16 +1309,16 @@ let mutation_scenarios =
           (p, rating)
         in
         let to_json (p, r) =
-          `Assoc [ ("p", id_name_json p); ("rating", opt int r) ]
+          `Assoc [("p", id_name_json p); ("rating", opt int r)]
         in
         Alcotest.(check (list (result yojson string)))
           "decoded"
-          [ Ok (to_json ({ id = uuid 1; name = "Arnica (maj)" }, Some 4)) ]
+          [Ok (to_json ({id = uuid 1; name = "Arnica (maj)"}, Some 4))]
           (decode_body "upsert_merge" row |> List.map (Result.map to_json)) );
     ( "update_partial_minimal",
       `Quick,
       fun () ->
-        let patch : (plants, [ `Partial ]) Input.t =
+        let patch : (plants, [`Partial]) Input.t =
           {
             fields =
               Input.
@@ -1339,7 +1330,8 @@ let mutation_scenarios =
         in
         check_result "unit" ~to_json:unit (ok ())
           (replay "update_partial_minimal" (fun () ->
-               C.update conn patch (where_id 2) Plants.table)) );
+               C.update conn ~returning:Zero patch (where_id 2) Plants.table))
+    );
     ( "update_returning_object (decode only)",
       `Quick,
       fun () ->
@@ -1360,14 +1352,14 @@ let mutation_scenarios =
         in
         Alcotest.(check (list (result yojson string)))
           "decoded"
-          [ Ok (to_json (uuid 2, Some 4, None)) ]
+          [Ok (to_json (uuid 2, Some 4, None))]
           (decode_body "update_returning_object" row
           |> List.map (Result.map to_json)) );
     ( "update_empty_body",
       `Quick,
       fun () ->
         let s = scenario "update_empty_body" in
-        let patch : (plants, [ `Partial ]) Input.t =
+        let patch : (plants, [`Partial]) Input.t =
           {
             fields =
               Input.
@@ -1384,13 +1376,14 @@ let mutation_scenarios =
         in
         check_result "unit" ~to_json:unit expected
           (replay "update_empty_body" (fun () ->
-               C.update conn patch (where_id 2) Plants.table)) );
+               C.update conn ~returning:Zero patch (where_id 2) Plants.table))
+    );
     ( "delete_minimal",
       `Quick,
       fun () ->
         check_result "unit" ~to_json:unit (ok ())
           (replay "delete_minimal" (fun () ->
-               C.delete conn
+               C.delete conn ~returning:Zero
                  Filter.(Eq (Observations.id, Value (obs_uuid 4)))
                  Observations.table)) );
     ( "delete_fk_violation",
@@ -1398,15 +1391,15 @@ let mutation_scenarios =
       fun () ->
         check_result "409" ~to_json:unit (Error (C.ErrorStatus 409))
           (replay "delete_fk_violation" (fun () ->
-               C.delete conn (where_id 1) Plants.table)) );
+               C.delete conn ~returning:Zero (where_id 1) Plants.table)) );
     ( "delete_returning_array (decode only)",
       `Quick,
       fun () ->
         Alcotest.(check (list (result yojson string)))
           "decoded"
           [
-            Ok (obs_id_note_json { id = obs_uuid 1; note = Some "En fleur" });
-            Ok (obs_id_note_json { id = obs_uuid 2; note = None });
+            Ok (obs_id_note_json {id = obs_uuid 1; note = Some "En fleur"});
+            Ok (obs_id_note_json {id = obs_uuid 2; note = None});
           ]
           (decode_body "delete_returning_array" obs_id_note_row
           |> List.map (Result.map obs_id_note_json)) );

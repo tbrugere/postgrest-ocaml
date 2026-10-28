@@ -23,66 +23,62 @@ module Plants = struct
   type t = plants
 
   let table : t Col.table = Col.table "plants"
+  let id : (t, string, [`Mandatory]) Col.t = {ty = Not_Null Str; name = "id"}
 
-  let id : (t, string, [ `Mandatory ]) Col.t =
-    { ty = Not_Null Str; name = "id" }
+  let name : (t, string, [`Mandatory]) Col.t =
+    {ty = Not_Null Str; name = "name"}
 
-  let name : (t, string, [ `Mandatory ]) Col.t =
-    { ty = Not_Null Str; name = "name" }
-
-  let scientific_name : (t, string option, [ `Optional ]) Col.t =
-    { ty = Nullable Str; name = "scientific_name" }
+  let scientific_name : (t, string option, [`Optional]) Col.t =
+    {ty = Nullable Str; name = "scientific_name"}
 
   (* NOT NULL with a default: optional on input, never null on output. *)
-  let status : (t, plant_status, [ `Optional ]) Col.t =
-    { ty = Not_Null (Enum plant_status_enum); name = "status" }
+  let status : (t, plant_status, [`Optional]) Col.t =
+    {ty = Not_Null (Enum plant_status_enum); name = "status"}
 
-  let rating : (t, int option, [ `Optional ]) Col.t =
-    { ty = Nullable Integer; name = "rating" }
+  let rating : (t, int option, [`Optional]) Col.t =
+    {ty = Nullable Integer; name = "rating"}
 
-  let height_cm : (t, float option, [ `Optional ]) Col.t =
-    { ty = Nullable Numeric; name = "height_cm" }
+  let height_cm : (t, float option, [`Optional]) Col.t =
+    {ty = Nullable Numeric; name = "height_cm"}
 
-  let is_native : (t, bool, [ `Optional ]) Col.t =
-    { ty = Not_Null Bool; name = "is_native" }
+  let is_native : (t, bool, [`Optional]) Col.t =
+    {ty = Not_Null Bool; name = "is_native"}
 
-  let created_at : (t, Ptime.t, [ `Optional ]) Col.t =
-    { ty = Not_Null TimestampTz; name = "created_at" }
+  let created_at : (t, Ptime.t, [`Optional]) Col.t =
+    {ty = Not_Null TimestampTz; name = "created_at"}
 
-  let tags : (t, Yojson.Safe.t option, [ `Optional ]) Col.t =
-    { ty = Nullable JSON; name = "tags" }
+  let tags : (t, Yojson.Safe.t option, [`Optional]) Col.t =
+    {ty = Nullable JSON; name = "tags"}
 
   let observations : (t, observations, 'a, 'a list) Col.relationship =
-    { ty = Many; name = "observations" }
+    {ty = Many; name = "observations"}
 end
 
 module Observations = struct
   type t = observations
 
   let table : t Col.table = Col.table "observations"
+  let id : (t, string, [`Mandatory]) Col.t = {ty = Not_Null Str; name = "id"}
 
-  let id : (t, string, [ `Mandatory ]) Col.t =
-    { ty = Not_Null Str; name = "id" }
+  let plant_id : (t, string, [`Mandatory]) Col.t =
+    {ty = Not_Null Str; name = "plant_id"}
 
-  let plant_id : (t, string, [ `Mandatory ]) Col.t =
-    { ty = Not_Null Str; name = "plant_id" }
+  let taken_at : (t, Ptime.t, [`Mandatory]) Col.t =
+    {ty = Not_Null TimestampTz; name = "taken_at"}
 
-  let taken_at : (t, Ptime.t, [ `Mandatory ]) Col.t =
-    { ty = Not_Null TimestampTz; name = "taken_at" }
+  let note : (t, string option, [`Optional]) Col.t =
+    {ty = Nullable Str; name = "note"}
 
-  let note : (t, string option, [ `Optional ]) Col.t =
-    { ty = Nullable Str; name = "note" }
+  let lat : (t, float option, [`Optional]) Col.t =
+    {ty = Nullable Numeric; name = "lat"}
 
-  let lat : (t, float option, [ `Optional ]) Col.t =
-    { ty = Nullable Numeric; name = "lat" }
-
-  let lon : (t, float option, [ `Optional ]) Col.t =
-    { ty = Nullable Numeric; name = "lon" }
+  let lon : (t, float option, [`Optional]) Col.t =
+    {ty = Nullable Numeric; name = "lon"}
 
   (* Embedding the parent through the foreign key: PostgREST names the
      embedded resource after the target table. *)
   let plant : (t, plants, 'a, 'a) Col.relationship =
-    { ty = Exactly_one; name = "plants" }
+    {ty = Exactly_one; name = "plants"}
 end
 
 (* Decoded records and the row specs that produce them. *)
@@ -122,37 +118,37 @@ let plant_row : (plants, plant) Row.t =
     tags;
   }
 
-type id_name = { id : string; name : string }
+type id_name = {id : string; name : string}
 
 let id_name_row : (plants, id_name) Row.t =
   let open Row.Syntax in
   let+ id = Row.col Plants.id and+ name = Row.col Plants.name in
-  { id; name }
+  {id; name}
 
-type obs_id_note = { id : string; note : string option }
+type obs_id_note = {id : string; note : string option}
 
 let obs_id_note_row : (observations, obs_id_note) Row.t =
   let open Row.Syntax in
   let+ id = Row.col Observations.id and+ note = Row.col Observations.note in
-  { id; note }
+  {id; note}
 
-type plant_with_obs = { id : string; name : string; obs : obs_id_note list }
+type plant_with_obs = {id : string; name : string; obs : obs_id_note list}
 
 let plant_with_obs_row : (plants, plant_with_obs) Row.t =
   let open Row.Syntax in
   let+ id = Row.col Plants.id
   and+ name = Row.col Plants.name
   and+ obs = Row.rel Plants.observations obs_id_note_row in
-  { id; name; obs }
+  {id; name; obs}
 
-type obs_with_plant = { id : string; note : string option; plant : id_name }
+type obs_with_plant = {id : string; note : string option; plant : id_name}
 
 let obs_with_plant_row : (observations, obs_with_plant) Row.t =
   let open Row.Syntax in
   let+ id = Row.col Observations.id
   and+ note = Row.col Observations.note
   and+ plant = Row.rel Observations.plant id_name_row in
-  { id; note; plant }
+  {id; note; plant}
 
 (* Seed rows, as fixtures/seed.sql declares them. *)
 
@@ -177,9 +173,7 @@ let arnica =
     tags =
       Some
         (`Assoc
-           [
-             ("color", `String "yellow"); ("alt", `List [ `Int 1500; `Int 2500 ]);
-           ]);
+           [("color", `String "yellow"); ("alt", `List [`Int 1500; `Int 2500])]);
   }
 
 let gentiane =
