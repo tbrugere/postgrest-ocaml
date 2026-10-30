@@ -31,8 +31,8 @@ let decode_base : type a. a base -> json -> (a option, error) result =
       | _ -> Error WrongType
       end
   | JSON, a -> Ok (Some a)
-  | Enum enum, `String s ->
-      begin match enum.of_string s with
+  | Custom custom, json ->
+      begin match custom.of_json json with
       | Some e -> Ok (Some e)
       | None -> Error WrongType
       end

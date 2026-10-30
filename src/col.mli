@@ -1,7 +1,7 @@
-type 'a enum = {
+type 'a custom = {
   name : string;
-  to_string : 'a -> string;
-  of_string : string -> 'a option;
+  to_json : 'a -> Yojson.Safe.t;
+  of_json : Yojson.Safe.t -> 'a option;
 }
 
 type _ base =
@@ -11,7 +11,7 @@ type _ base =
   | Str : string base
   | TimestampTz : Ptime.t base
   | JSON : Yojson.Safe.t base
-  | Enum : 'a enum -> 'a base
+  | Custom : 'a custom -> 'a base
 
 type _ ty = Nullable : 'a base -> 'a option ty | Not_Null : 'a base -> 'a ty
 type 'table table

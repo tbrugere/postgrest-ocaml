@@ -8,14 +8,15 @@ type plants
 type observations
 type plant_status = Active | Archived
 
-let plant_status_enum : plant_status Col.enum =
+let plant_status_custom : plant_status Col.custom =
   {
     name = "plant_status";
-    to_string = (function Active -> "active" | Archived -> "archived");
-    of_string =
+    to_json =
+      (function Active -> `String "active" | Archived -> `String "archived");
+    of_json =
       (function
-      | "active" -> Some Active
-      | "archived" -> Some Archived
+      | `String "active" -> Some Active
+      | `String "archived" -> Some Archived
       | _ -> None);
   }
 
@@ -33,7 +34,7 @@ module Plants = struct
 
   (* NOT NULL with a default: optional on input, never null on output. *)
   let status : (t, plant_status, [`Optional]) Col.t =
-    {ty = Not_Null (Enum plant_status_enum); name = "status"}
+    {ty = Not_Null (Custom plant_status_custom); name = "status"}
 
   let rating : (t, int option, [`Optional]) Col.t =
     {ty = Nullable Integer; name = "rating"}

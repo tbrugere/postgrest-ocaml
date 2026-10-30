@@ -221,6 +221,48 @@ let enc f = Filter.encode f
 let check_param name expected f =
   Alcotest.(check (pair string string)) name expected (enc f)
 
+(* Custom codecs: a `String payload goes on the wire bare, anything else as
+   its JSON text, so a filter on a custom column reads like one on a plain
+   column of the underlying type. *)
+let int_custom : int Col.custom =
+  {
+    name = "int_custom";
+    to_json = (fun n -> `Int n);
+    of_json = (function `Int n -> Some n | _ -> None);
+  }
+
+let custom_tests =
+  [
+    ( "a string payload is encoded bare",
+      `Quick,
+      fun () ->
+        Alcotest.(check string)
+          "encode_base" "archived"
+          (Col.encode_base (Custom plant_status_custom) Archived) );
+    ( "a non-string payload is encoded as its JSON text",
+      `Quick,
+      fun () ->
+        Alcotest.(check string)
+          "encode_base" "3"
+          (Col.encode_base (Custom int_custom) 3) );
+    ( "to_json is the codec's JSON",
+      `Quick,
+      fun () ->
+        Alcotest.(check string)
+          "base_to_json" {|"archived"|}
+          (Yojson.Safe.to_string
+             (Col.base_to_json (Custom plant_status_custom) Archived));
+        Alcotest.(check string)
+          "base_to_json" "3"
+          (Yojson.Safe.to_string (Col.base_to_json (Custom int_custom) 3)) );
+    ( "of_json rejects a payload of the wrong shape",
+      `Quick,
+      fun () ->
+        Alcotest.(check (option int))
+          "of_json" None
+          (int_custom.of_json (`String "3")) );
+  ]
+
 let filter_tests =
   let open Filter in
   [
@@ -1408,6 +1450,7 @@ let mutation_scenarios =
 let () =
   Alcotest.run "postgrest"
     [
+      ("custom codecs", custom_tests);
       ("filters", filter_tests);
       ("rows", row_tests);
       ("inputs", input_tests);
