@@ -73,7 +73,7 @@ let to_json : type a. a ty -> a -> Yojson.Safe.t =
   | Nullable base, Some v -> base_to_json base v
   | Not_Null base, v -> base_to_json base v
 
-let decode_base : type a. a base -> json -> (a option, [>`WrongType]) result =
+let decode_base : type a. a base -> json -> (a option, [> `WrongType]) result =
  fun base value ->
   match (base, value) with
   | _, `Null -> Ok None
@@ -97,14 +97,15 @@ let decode_base : type a. a base -> json -> (a option, [>`WrongType]) result =
       end
   | _ -> Error `WrongType
 
-let decode_type : type a. a ty -> json -> (a, [>`WrongType|`UnexpectedNull]) result =
+let decode_type : type a.
+    a ty -> json -> (a, [> `WrongType | `UnexpectedNull]) result =
  fun ty value ->
   match ty with
   | Nullable base -> decode_base base value
   | Not_Null base ->
       let open Result.Syntax in
       let* decoded = decode_base base value in
-      Option.to_result ~none:`UnexpectedNull decoded 
+      Option.to_result ~none:`UnexpectedNull decoded
 
 module BaseTypes = struct
   type nonrec 'a ty = 'a ty

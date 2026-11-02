@@ -27,7 +27,7 @@ let col : ('table, 'a, 'o) Col.t -> ('table, 'a) t = function
       let decode (obj : json) : ('a, error) result =
         let open Result.Syntax in
         let* value = get_row name obj in
-        Col.decode_type ty value 
+        Col.decode_type ty value
       in
       {columns; decode}
 

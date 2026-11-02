@@ -35,7 +35,8 @@ val encode_value : 'a ty -> 'a -> string
 val base_to_json : 'a base -> 'a -> Yojson.Safe.t
 val to_json : 'a ty -> 'a -> Yojson.Safe.t
 
-val decode_type : 'a ty -> Yojson.Safe.t -> ('a, [>`WrongType|`UnexpectedNull]) result
+val decode_type :
+  'a ty -> Yojson.Safe.t -> ('a, [> `WrongType | `UnexpectedNull]) result
 
 module BaseTypes : sig
   type nonrec 'a ty = 'a ty
