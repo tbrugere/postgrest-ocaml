@@ -23,11 +23,11 @@ let yojson =
     Yojson.Safe.equal
 
 let string_of_row_error = function
-  | Row.Missing -> "Missing"
-  | Row.NotAnObject -> "NotAnObject"
-  | Row.WrongType -> "WrongType"
-  | Row.UnexpectedNull -> "UnexpectedNull"
-  | Row.DummyRow -> "DummyRow"
+  | `Missing -> "Missing"
+  | `NotAnObject -> "NotAnObject"
+  | `WrongType -> "WrongType"
+  | `UnexpectedNull -> "UnexpectedNull"
+  | `DummyRow -> "DummyRow"
 
 let string_of_error : C.error -> string = function
   | C.IOError e -> "IOError " ^ e
@@ -428,22 +428,22 @@ let row_tests =
     ( "missing field",
       `Quick,
       fun () ->
-        check_row "missing" ~to_json:id_name_json (Error Row.Missing)
-          id_name_row {|{"id":"x"}|} );
+        check_row "missing" ~to_json:id_name_json (Error `Missing) id_name_row
+          {|{"id":"x"}|} );
     ( "not an object",
       `Quick,
       fun () ->
-        check_row "array" ~to_json:id_name_json (Error Row.NotAnObject)
-          id_name_row {|[1]|} );
+        check_row "array" ~to_json:id_name_json (Error `NotAnObject) id_name_row
+          {|[1]|} );
     ( "wrong type",
       `Quick,
       fun () ->
-        check_row "wrong" ~to_json:id_name_json (Error Row.WrongType)
-          id_name_row {|{"id":1,"name":"x"}|} );
+        check_row "wrong" ~to_json:id_name_json (Error `WrongType) id_name_row
+          {|{"id":1,"name":"x"}|} );
     ( "null in a not-null column",
       `Quick,
       fun () ->
-        check_row "null" ~to_json:id_name_json (Error Row.UnexpectedNull)
+        check_row "null" ~to_json:id_name_json (Error `UnexpectedNull)
           id_name_row {|{"id":null,"name":"x"}|} );
     ( "nullable columns",
       `Quick,
@@ -473,7 +473,7 @@ let row_tests =
       `Quick,
       fun () ->
         let row = Row.col Plants.status in
-        check_row "enum" ~to_json:status_json (Error Row.WrongType) row
+        check_row "enum" ~to_json:status_json (Error `WrongType) row
           {|{"status":"dormant"}|} );
     ( "timestamp with offset",
       `Quick,
@@ -525,7 +525,7 @@ let row_tests =
     ( "embedded exactly one given null",
       `Quick,
       fun () ->
-        check_row "null" ~to_json:obs_with_plant_json (Error Row.UnexpectedNull)
+        check_row "null" ~to_json:obs_with_plant_json (Error `UnexpectedNull)
           obs_with_plant_row {|{"id":"o","note":null,"plants":null}|} );
     ( "select list names every column once",
       `Quick,
@@ -754,7 +754,7 @@ let header_tests =
         Mock_http.reset ();
         Mock_http.respond {|[{"id":"a","name":"n"},{"id":"b"}]|};
         check_result "index" ~to_json:(list id_name_json)
-          (Error (C.BadResponse (Client.RowError (1, Row.Missing))))
+          (Error (C.BadResponse (Client.RowError (1, `Missing))))
           (C.select conn (Many id_name_row) all Plants.table) );
   ]
 

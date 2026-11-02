@@ -1,5 +1,5 @@
 type json = Yojson.Safe.t
-type error = Missing | NotAnObject | WrongType | UnexpectedNull | DummyRow
+type error = [`Missing | `NotAnObject | `WrongType | `UnexpectedNull | `DummyRow]
 type ('table, 'a) t
 
 val dummy_row : ('table, 'a) t

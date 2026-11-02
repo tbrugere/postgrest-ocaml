@@ -1,3 +1,5 @@
+type json = Yojson.Safe.t
+
 type 'a custom = {
   name : string;
   to_json : 'a -> Yojson.Safe.t;
@@ -70,6 +72,39 @@ let to_json : type a. a ty -> a -> Yojson.Safe.t =
   | Nullable _, None -> `Null
   | Nullable base, Some v -> base_to_json base v
   | Not_Null base, v -> base_to_json base v
+
+let decode_base : type a. a base -> json -> (a option, [>`WrongType]) result =
+ fun base value ->
+  match (base, value) with
+  | _, `Null -> Ok None
+  | Integer, `Int a -> Ok (Some a)
+  | Integer, `Intlit a -> Ok (Some (int_of_string a))
+  | Numeric, `Float a -> Ok (Some a)
+  | Numeric, `Int a -> Ok (Some (float_of_int a))
+  | Numeric, `Intlit a -> Ok (Some (float_of_string a))
+  | Bool, `Bool a -> Ok (Some a)
+  | Str, `String a -> Ok (Some a)
+  | TimestampTz, `String a ->
+      begin match Ptime.of_rfc3339 a with
+      | Ok (t, _, _) -> Ok (Some t)
+      | _ -> Error `WrongType
+      end
+  | JSON, a -> Ok (Some a)
+  | Custom custom, json ->
+      begin match custom.of_json json with
+      | Some e -> Ok (Some e)
+      | None -> Error `WrongType
+      end
+  | _ -> Error `WrongType
+
+let decode_type : type a. a ty -> json -> (a, [>`WrongType|`UnexpectedNull]) result =
+ fun ty value ->
+  match ty with
+  | Nullable base -> decode_base base value
+  | Not_Null base ->
+      let open Result.Syntax in
+      let* decoded = decode_base base value in
+      Option.to_result ~none:`UnexpectedNull decoded 
 
 module BaseTypes = struct
   type nonrec 'a ty = 'a ty

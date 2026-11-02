@@ -2,7 +2,7 @@ open Util
 open Col.BaseTypes
 
 type json = Yojson.Safe.t
-type error = Missing | NotAnObject | WrongType | UnexpectedNull | DummyRow
+type error = [`Missing | `NotAnObject | `WrongType | `UnexpectedNull | `DummyRow]
 type columninfo = Name of string | Relationship of string * columninfo list
 
 type ('table, 'a) t = {
@@ -12,47 +12,14 @@ type ('table, 'a) t = {
 
 (*used in context where we *)
 let dummy_row : ('table, 'a) t =
-  {columns = []; decode = (fun _ -> Error DummyRow)}
-
-let decode_base : type a. a base -> json -> (a option, error) result =
- fun base value ->
-  match (base, value) with
-  | _, `Null -> Ok None
-  | Integer, `Int a -> Ok (Some a)
-  | Integer, `Intlit a -> Ok (Some (int_of_string a))
-  | Numeric, `Float a -> Ok (Some a)
-  | Numeric, `Int a -> Ok (Some (float_of_int a))
-  | Numeric, `Intlit a -> Ok (Some (float_of_string a))
-  | Bool, `Bool a -> Ok (Some a)
-  | Str, `String a -> Ok (Some a)
-  | TimestampTz, `String a ->
-      begin match Ptime.of_rfc3339 a with
-      | Ok (t, _, _) -> Ok (Some t)
-      | _ -> Error WrongType
-      end
-  | JSON, a -> Ok (Some a)
-  | Custom custom, json ->
-      begin match custom.of_json json with
-      | Some e -> Ok (Some e)
-      | None -> Error WrongType
-      end
-  | _ -> Error WrongType
-
-let decode_type : type a. a ty -> json -> (a, error) result =
- fun ty value ->
-  match ty with
-  | Nullable base -> decode_base base value
-  | Not_Null base ->
-      let open Result.Syntax in
-      let* decoded = decode_base base value in
-      Option.to_result ~none:UnexpectedNull decoded
+  {columns = []; decode = (fun _ -> Error `DummyRow)}
 
 let decode : ('table, 'a) t -> json -> ('a, error) result =
  fun row json -> row.decode json
 
 let get_row (name : string) : json -> (json, error) result = function
-  | `Assoc obj -> obj |> List.assoc_opt name |> Option.to_result ~none:Missing
-  | _ -> Error NotAnObject
+  | `Assoc obj -> obj |> List.assoc_opt name |> Option.to_result ~none:`Missing
+  | _ -> Error `NotAnObject
 
 let col : ('table, 'a, 'o) Col.t -> ('table, 'a) t = function
   | {ty; name} ->
@@ -60,7 +27,7 @@ let col : ('table, 'a, 'o) Col.t -> ('table, 'a) t = function
       let decode (obj : json) : ('a, error) result =
         let open Result.Syntax in
         let* value = get_row name obj in
-        decode_type ty value
+        Col.decode_type ty value 
       in
       {columns; decode}
 
@@ -77,10 +44,10 @@ let rel : type a out.
     | One, v ->
         let+ decoded = inner_decode v in
         Some decoded
-    | Exactly_one, `Null -> Error UnexpectedNull
+    | Exactly_one, `Null -> Error `UnexpectedNull
     | Exactly_one, v -> inner_decode v
     | Many, `List values -> values |> List.map inner_decode |> result_all
-    | _ -> Error WrongType
+    | _ -> Error `WrongType
   in
   let decode (obj : json) : (out, error) result =
     let* value = get_row name obj in
