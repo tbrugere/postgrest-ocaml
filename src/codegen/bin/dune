@@ -1,0 +1,5 @@
+(executable
+ (name main)
+ (public_name postgrest-codegen)
+ (package postgrest-codegen)
+ (libraries postgrest-codegen))

@@ -1,0 +1,9 @@
+; Tests for postgrest-codegen: catalog decoding (table objects), metadata,
+; every rule and error on small hand-built catalogs, and the emitted AST. cli.t
+; runs the executable.
+(test
+ (name test_codegen)
+ (libraries postgrest-codegen ppxlib yojson fmt alcotest))
+
+(cram
+ (deps %{bin:postgrest-codegen}))

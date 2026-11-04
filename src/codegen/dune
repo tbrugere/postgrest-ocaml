@@ -1,0 +1,8 @@
+; Package postgrest-codegen: a Postgres catalog (catalog.sql's output) to the
+; Postgrest.Col declarations of their tables (README.md). A build-time tool in
+; its own package, so the postgrest library does not pull ppxlib.
+(library
+ (name postgrest_codegen)
+ (public_name postgrest-codegen)
+ (libraries yojson ppxlib)
+ (preprocess (pps ppxlib.metaquot ppx_deriving_yojson)))
