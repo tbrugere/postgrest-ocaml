@@ -44,7 +44,7 @@ let encode_base : type a. a base -> a -> string =
   | Numeric -> string_of_float value
   | Bool -> string_of_bool value
   | Str -> value
-  | TimestampTz -> Ptime.to_rfc3339 ~tz_offset_s:0 value
+  | TimestampTz -> Ptime.to_rfc3339 ~tz_offset_s:0 ~frac_s:6 value
   | JSON -> Yojson.Safe.to_string value
   | Custom custom -> string_of_custom custom value
 
@@ -62,7 +62,7 @@ let base_to_json : type a. a base -> a -> Yojson.Safe.t =
   | Numeric -> `Float value
   | Bool -> `Bool value
   | Str -> `String value
-  | TimestampTz -> `String (Ptime.to_rfc3339 ~tz_offset_s:0 value)
+  | TimestampTz -> `String (Ptime.to_rfc3339 ~tz_offset_s:0 ~frac_s:6 value)
   | JSON -> value
   | Custom custom -> custom.to_json value
 
