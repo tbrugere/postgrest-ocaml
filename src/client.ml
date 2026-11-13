@@ -151,7 +151,7 @@ module Make (H : HTTP) = struct
 
   type error =
     | IOError of H.error
-    | ErrorStatus of int
+    | ErrorStatus of {status : int; body : string}
     | BadResponse of bad_response
 
   module IO = H.IO
@@ -174,7 +174,7 @@ module Make (H : HTTP) = struct
    fun card response_res ->
     match response_res with
     | Error ioerror -> Error (IOError ioerror)
-    | Ok {status; _} when is_error_status status -> Error (ErrorStatus status)
+    | Ok {status; body; _} when is_error_status status -> Error (ErrorStatus {status; body})
     | Ok {body; _} ->
         select_decode card body
         |> Result.map_error (fun bad_response -> BadResponse bad_response)

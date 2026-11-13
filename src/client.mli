@@ -42,7 +42,7 @@ module Make : (H : HTTP) -> sig
 
   type error =
     | IOError of H.error
-    | ErrorStatus of int
+    | ErrorStatus of {status : int; body : string}
     | BadResponse of bad_response
 
   val select :
