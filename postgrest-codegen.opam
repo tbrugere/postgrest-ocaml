@@ -8,7 +8,7 @@ those tables as OCaml. A build-time tool, separate from the postgrest
 library so that the library does not depend on ppxlib."""
 maintainer: ["Tristan Brugère"]
 authors: ["Tristan Brugère"]
-license: "MIT"
+license: "CECILL-B"
 homepage: "https://github.com/tbrugere/herbier"
 bug-reports: "https://github.com/tbrugere/herbier/issues"
 depends: [

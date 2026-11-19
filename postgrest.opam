@@ -3,7 +3,7 @@ opam-version: "2.0"
 synopsis: "Sans-IO PostgREST client: typed columns, rows, filters, requests"
 maintainer: ["Tristan Brugère"]
 authors: ["Tristan Brugère"]
-license: "MIT"
+license: "CECILL-B"
 homepage: "https://github.com/tbrugere/herbier"
 bug-reports: "https://github.com/tbrugere/herbier/issues"
 depends: [
