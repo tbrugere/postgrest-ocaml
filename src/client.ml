@@ -20,6 +20,7 @@ type bad_response =
   | RowError of int * Row.error
   | ExpectedArray
   | JsonError of string
+  [@@deriving show, eq]
 
 type (_, _, _) card =
   | One : ('table, 'a) Row.t -> ('table, 'a, [< `Select | `Mutation]) card

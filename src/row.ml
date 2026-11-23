@@ -2,7 +2,7 @@ open Util
 open Col.BaseTypes
 
 type json = Yojson.Safe.t
-type error = [`Missing | `NotAnObject | `WrongType | `UnexpectedNull | `DummyRow]
+type error = [`Missing | `NotAnObject | `WrongType | `UnexpectedNull | `DummyRow]  [@@deriving show, eq]
 type columninfo = Name of string | Relationship of string * columninfo list
 
 type ('table, 'a) t = {
