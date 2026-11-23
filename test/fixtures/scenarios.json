@@ -469,7 +469,7 @@
   {
     "method": "GET",
     "name": "select_timestamp_gt",
-    "path_query": "/observations?taken_at=gt.2026-06-15T00:00:00Z&select=id,taken_at&order=id",
+    "path_query": "/observations?taken_at=gt.2026-06-15T00:00:00.000000Z&select=id,taken_at&order=id",
     "request_body": null,
     "request_headers": {
       "Accept": "application/json"
@@ -485,12 +485,12 @@
       }
     ],
     "response_headers": {
-      "content-location": "/observations?order=id&select=id%2Ctaken_at&taken_at=gt.2026-06-15T00%3A00%3A00Z",
+      "content-location": "/observations?order=id&select=id%2Ctaken_at&taken_at=gt.2026-06-15T00%3A00%3A00.000000Z",
       "content-range": "0-1/*",
       "content-type": "application/json; charset=utf-8"
     },
     "status": 200,
-    "url_sent": "/observations?taken_at=gt.2026-06-15T00:00:00Z&select=id,taken_at&order=id"
+    "url_sent": "/observations?taken_at=gt.2026-06-15T00:00:00.000000Z&select=id,taken_at&order=id"
   },
   {
     "method": "GET",

@@ -149,7 +149,7 @@
     {
       "name": "select_timestamp_gt",
       "method": "GET",
-      "path_query": "/observations?taken_at=gt.2026-06-15T00:00:00Z&select=id,taken_at&order=id",
+      "path_query": "/observations?taken_at=gt.2026-06-15T00:00:00.000000Z&select=id,taken_at&order=id",
       "headers": {
         "Accept": "application/json"
       }
