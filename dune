@@ -1,0 +1,10 @@
+; docs/ holds no OCaml; keep dune out of it.
+(dirs :standard \ docs)
+
+; Dune lang 3.24 no longer enables the strict unused-variable warnings in
+; the dev profile; bring back what older dune versions errored on: unused
+; pattern/parameter variables (27) and unused values, opens, types,
+; constructors, fields and rec flags (32..39).
+(env
+ (dev
+  (flags (:standard -w +27+32..39))))

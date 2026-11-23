@@ -9,8 +9,8 @@ library so that the library does not depend on ppxlib."""
 maintainer: ["Tristan Brugère"]
 authors: ["Tristan Brugère"]
 license: "CECILL-B"
-homepage: "https://github.com/tbrugere/herbier"
-bug-reports: "https://github.com/tbrugere/herbier/issues"
+homepage: "https://github.com/tbrugere/postgrest-ocaml"
+bug-reports: "https://github.com/tbrugere/postgrest-ocaml/issues"
 depends: [
   "dune" {>= "3.24"}
   "ocaml" {>= "5.3"}
@@ -36,5 +36,5 @@ build: [
     "@doc" {with-doc}
   ]
 ]
-dev-repo: "git+https://github.com/tbrugere/herbier.git"
+dev-repo: "git+https://github.com/tbrugere/postgrest-ocaml.git"
 x-maintenance-intent: ["(latest)"]

@@ -31,7 +31,8 @@ let string_of_row_error = function
 
 let string_of_error : C.error -> string = function
   | C.IOError e -> "IOError " ^ e
-  | C.ErrorStatus n -> "ErrorStatus " ^ string_of_int n
+  | C.ErrorStatus {status; body} ->
+      Printf.sprintf "ErrorStatus {status = %d; body = %S}" status body
   | C.BadResponse (Client.RowError (i, e)) ->
       Printf.sprintf "BadResponse (RowError (%d, %s))" i (string_of_row_error e)
   | C.BadResponse Client.ExpectedArray -> "BadResponse ExpectedArray"
@@ -168,6 +169,13 @@ let prefer_set v =
 
 (* Install the recorded response, run the client call, then check that the
    request the client produced is the one that was really sent. *)
+(* The error the client returns for a recorded error response: the expected
+   [status], checked against the recording, and the recorded body. *)
+let http_error status name =
+  let s = scenario name in
+  Alcotest.(check int) (name ^ ": recorded status") status s.status;
+  C.ErrorStatus {status; body = s.response_body}
+
 let replay ?params name (call : unit -> 'a) : 'a =
   let s = scenario name in
   Mock_http.reset ();
@@ -297,11 +305,11 @@ let filter_tests =
       fun () ->
         check_param "gt" ("height_cm", "gt.30.5")
           (Gt (Plants.height_cm, Value (Some 30.5))) );
-    ( "timestamp renders as UTC with Z",
+    ( "timestamp renders as UTC with microseconds and Z",
       `Quick,
       fun () ->
         check_param "gt"
-          ("taken_at", "gt.2026-06-15T00:00:00Z")
+          ("taken_at", "gt.2026-06-15T00:00:00.000000Z")
           (Gt (Observations.taken_at, Value (ptime "2026-06-15T00:00:00Z"))) );
     ( "enum",
       `Quick,
@@ -601,7 +609,7 @@ let input_tests =
           (`Assoc
              [
                ("status", `String "archived");
-               ("created_at", `String "2026-03-01T10:00:00Z");
+               ("created_at", `String "2026-03-01T10:00:00.000000Z");
              ])
           (input_json i) );
     ( "batch is a JSON array",
@@ -783,7 +791,8 @@ let select_scenarios =
     ( "select_one_missing",
       `Quick,
       fun () ->
-        check_result "406" ~to_json:id_name_json (Error (C.ErrorStatus 406))
+        check_result "406" ~to_json:id_name_json
+          (Error (http_error 406 "select_one_missing"))
           (replay "select_one_missing" (fun () ->
                C.select conn (One id_name_row) (where_id 99) Plants.table)) );
     ( "select_eq_with_space",
@@ -1167,14 +1176,16 @@ let select_scenarios =
       `Quick,
       fun () ->
         let row = Row.col {Col.ty = Not_Null Str; name = "nope"} in
-        check_result "400" ~to_json:(list str) (Error (C.ErrorStatus 400))
+        check_result "400" ~to_json:(list str)
+          (Error (http_error 400 "select_bad_column"))
           (replay "select_bad_column" (fun () ->
                C.select conn (Many row) all Plants.table)) );
     ( "select_bad_table",
       `Quick,
       fun () ->
         let table : plants Col.table = Col.table "nothing" in
-        check_result "404" ~to_json:(list str) (Error (C.ErrorStatus 404))
+        check_result "404" ~to_json:(list str)
+          (Error (http_error 404 "select_bad_table"))
           (replay "select_bad_table" (fun () ->
                C.select conn (Many (Row.col Plants.id)) all table)) );
   ]
@@ -1236,7 +1247,8 @@ let mutation_scenarios =
                 ];
           }
         in
-        check_result "409" ~to_json:unit (Error (C.ErrorStatus 409))
+        check_result "409" ~to_json:unit
+          (Error (http_error 409 "insert_duplicate_error"))
           (replay "insert_duplicate_error" (fun () ->
                C.insert conn ~returning:Zero dup Plants.table)) );
     ( "insert_batch_minimal",
@@ -1261,7 +1273,8 @@ let mutation_scenarios =
     ( "insert_batch_mismatched_keys is a 400 from PostgREST",
       `Quick,
       fun () ->
-        check_result "400" ~to_json:unit (Error (C.ErrorStatus 400))
+        check_result "400" ~to_json:unit
+          (Error (http_error 400 "insert_batch_mismatched_keys"))
           (replay "insert_batch_mismatched_keys" (fun () ->
                C.insert_batch conn ~returning:Zero [new_plant; other_plant]
                  Plants.table)) );
@@ -1414,7 +1427,8 @@ let mutation_scenarios =
         let expected =
           match s.status < 400 with
           | true -> ok ()
-          | false -> Error (C.ErrorStatus s.status)
+          | false ->
+              Error (C.ErrorStatus {status = s.status; body = s.response_body})
         in
         check_result "unit" ~to_json:unit expected
           (replay "update_empty_body" (fun () ->
@@ -1431,7 +1445,8 @@ let mutation_scenarios =
     ( "delete_fk_violation",
       `Quick,
       fun () ->
-        check_result "409" ~to_json:unit (Error (C.ErrorStatus 409))
+        check_result "409" ~to_json:unit
+          (Error (http_error 409 "delete_fk_violation"))
           (replay "delete_fk_violation" (fun () ->
                C.delete conn ~returning:Zero (where_id 1) Plants.table)) );
     ( "delete_returning_array (decode only)",

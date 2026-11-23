@@ -1,0 +1,13 @@
+(lang dune 3.24)
+
+; dune pkg lock solves against this opam-repository commit, the one of the
+; committed lock, so that adding a dependency does not upgrade the others or
+; the compiler. Moving it is a deliberate upgrade. The default upstream cannot
+; be redefined, hence a new name; overlay and relocatable are the defaults.
+(repository
+ (name upstream-pinned)
+ (url
+  git+https://github.com/ocaml/opam-repository.git#ac27950e5eac6c981ad809dff370c937820b7893))
+
+(lock_dir
+ (repositories overlay relocatable upstream-pinned))

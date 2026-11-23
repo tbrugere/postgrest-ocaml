@@ -1,0 +1,18 @@
+# dune build outputs. The generated opam files and dune.lock/ are committed;
+# refresh the opam files with `dune build @opam --auto-promote`.
+_build/
+_opam/
+*.install
+.merlin
+
+# direnv: local env and secrets
+.envrc
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+.lavish/
+.review-report/
+.implement/

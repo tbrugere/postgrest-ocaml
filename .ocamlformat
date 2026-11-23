@@ -1,0 +1,8 @@
+version = 0.29.0
+profile = default
+margin = 80
+break-infix = fit-or-vertical
+space-around-lists = false
+space-around-arrays = false
+space-around-records = false
+space-around-variants = false
