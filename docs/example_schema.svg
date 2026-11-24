@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="234" viewBox="0 0 700 234" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12">
+  <title>Example schema: authors, books and genres (docs/example_schema.sql)</title>
+  <style>
+    .bg { fill: #ffffff; }
+    .box { fill: #ffffff; stroke: #1f2328; stroke-width: 1.2; }
+    .head { fill: #eef2f7; stroke: #1f2328; stroke-width: 1.2; }
+    .name { fill: #1f2328; font-weight: 700; font-size: 14px; }
+    .attr { fill: #1f2328; }
+    .stereo { fill: #57606a; font-size: 11px; }
+    .muted { fill: #8c959f; font-style: italic; }
+    .sep { stroke: #1f2328; stroke-width: 1; }
+    .key { fill: #0969da; font-weight: 700; font-size: 10px; }
+    .edge { fill: none; stroke: #57606a; stroke-width: 1.2; }
+    .arrow { fill: none; stroke: #57606a; stroke-width: 1.2; }
+    .mult { fill: #57606a; font-size: 11px; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #0d1117; }
+      .box { fill: #0d1117; stroke: #c9d1d9; }
+      .head { fill: #161b22; stroke: #c9d1d9; }
+      .name, .attr { fill: #e6edf3; }
+      .mult, .stereo { fill: #8b949e; }
+      .muted { fill: #6e7681; }
+      .sep { stroke: #c9d1d9; }
+      .key { fill: #4493f8; }
+      .edge, .arrow { stroke: #8b949e; }
+    }
+  </style>
+  <defs>
+    <marker id="to" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path class="arrow" d="M0,0 L10,5 L0,10"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" width="700" height="234"/>
+
+  <!-- books.author_id -> authors.id -->
+  <path class="edge" d="M380,111 H330 V67 H300" marker-end="url(#to)"/>
+  <text class="mult" x="314" y="58">1</text>
+  <text class="mult" x="375" y="105" text-anchor="end">0..*</text>
+
+  <!-- books.genre -> genres.value -->
+  <path class="edge" d="M380,133 H350 V181 H300" marker-end="url(#to)"/>
+  <text class="mult" x="314" y="174">1</text>
+  <text class="mult" x="375" y="127" text-anchor="end">0..*</text>
+
+  <!-- authors -->
+  <rect class="box" x="20" y="20" width="280" height="80"/>
+  <rect class="head" x="20" y="20" width="280" height="36"/>
+  <text class="name" x="160" y="43" text-anchor="middle">authors</text>
+  <text class="key" x="28" y="73">PK</text>
+  <text class="attr" x="54" y="73">id : uuid = gen_random_uuid()</text>
+  <text class="attr" x="54" y="95">name : text</text>
+
+  <!-- genres -->
+  <rect class="box" x="20" y="126" width="280" height="88"/>
+  <rect class="head" x="20" y="126" width="280" height="44"/>
+  <text class="stereo" x="160" y="143" text-anchor="middle">«lookup»</text>
+  <text class="name" x="160" y="162" text-anchor="middle">genres</text>
+  <text class="key" x="28" y="185">PK</text>
+  <text class="attr" x="54" y="185">value : text</text>
+  <line class="sep" x1="20" y1="192" x2="300" y2="192"/>
+  <text class="muted" x="54" y="207">essay | novel | poetry</text>
+
+  <!-- books -->
+  <rect class="box" x="380" y="20" width="300" height="168"/>
+  <rect class="head" x="380" y="20" width="300" height="36"/>
+  <text class="name" x="530" y="43" text-anchor="middle">books</text>
+  <text class="key" x="388" y="73">PK</text>
+  <text class="attr" x="414" y="73">id : uuid = gen_random_uuid()</text>
+  <text class="attr" x="414" y="95">title : text</text>
+  <text class="key" x="388" y="117">FK</text>
+  <text class="attr" x="414" y="117">author_id : uuid</text>
+  <text class="key" x="388" y="139">FK</text>
+  <text class="attr" x="414" y="139">genre : text</text>
+  <text class="attr" x="414" y="161">year : integer?</text>
+  <text class="attr" x="414" y="183">added_at : timestamptz = now()</text>
+</svg>
