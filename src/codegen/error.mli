@@ -16,7 +16,13 @@ type t =
   | Uuid_without_id of {table : string; column : string}
       (** A [uuid] column that is neither the key of a table with [id=] nor a
           foreign key to one. *)
-  | Lookup_without_ocaml of {table : string; column : string; lookup : string}
+  | Empty_lookup of {table : string}
+      (** A lookup table without [ocaml=] and without values: its generated type
+          would have no constructor. *)
+  | Bad_lookup_value of {table : string; value : string}
+      (** A value of a lookup table without [ocaml=] that is not a constructor
+          once capitalised: a letter, then letters, digits, [_] or [']. Two
+          values that capitalise the same are left to the compiler. *)
   | Generated_column of {table : string; column : string}
       (** PostgREST rejects a write to it, which its column would allow. *)
   | Ambiguous_relationship of {table : string; column : string; other : string}

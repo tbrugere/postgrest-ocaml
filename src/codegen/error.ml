@@ -5,7 +5,8 @@ type t =
   | Unknown_metadata of {table : string; column : string option; key : string}
   | Unsupported_type of {table : string; column : string; sql_type : string}
   | Uuid_without_id of {table : string; column : string}
-  | Lookup_without_ocaml of {table : string; column : string; lookup : string}
+  | Empty_lookup of {table : string}
+  | Bad_lookup_value of {table : string; value : string}
   | Generated_column of {table : string; column : string}
   | Ambiguous_relationship of {table : string; column : string; other : string}
   | Unique_foreign_key of {table : string; column : string}
@@ -30,10 +31,16 @@ let to_string = function
       Printf.sprintf
         "%s: a uuid column must be the key of, or reference, a table with id="
         (place table (Some column))
-  | Lookup_without_ocaml {table; column; lookup} ->
-      Printf.sprintf "%s: lookup table %s has no ocaml="
-        (place table (Some column))
-        lookup
+  | Empty_lookup {table} ->
+      Printf.sprintf
+        "table %s: a lookup table without ocaml= needs values to generate its \
+         module"
+        table
+  | Bad_lookup_value {table; value} ->
+      Printf.sprintf
+        "table %s: lookup value %S cannot be an OCaml constructor (give the \
+         table ocaml= to write the module by hand)"
+        table value
   | Generated_column {table; column} ->
       Printf.sprintf "%s: generated columns are not supported"
         (place table (Some column))

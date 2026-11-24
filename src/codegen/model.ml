@@ -26,7 +26,8 @@ type table = {
   relationships : relationship list;
 }
 
-type t = {codecs : codec list; tables : table list}
+type lookup = {module_name : string; constructors : (string * string) list}
+type t = {lookups : lookup list; codecs : codec list; tables : table list}
 
 let ( let* ) = Result.bind
 
@@ -83,7 +84,7 @@ let flag table (c : Catalog.column) =
       | None -> Ok (c, Plain))
 
 type context = {
-  lookups : (string * codec option) list;
+  lookups : (string * codec) list;
   ids : (string * codec) list;
   entities : string list;
   synced : (string * (Catalog.column * flag) list) list;
@@ -119,11 +120,7 @@ let base ctx table (c : Catalog.column) =
       Error (Error.Generated_column {table; column = c.name})
   | Some target, sql_type -> (
       match (List.assoc_opt target ctx.lookups, sql_type) with
-      | Some (Some codec), _ -> Ok (Custom codec)
-      | Some None, _ ->
-          Error
-            (Error.Lookup_without_ocaml
-               {table; column = c.name; lookup = target})
+      | Some codec, _ -> Ok (Custom codec)
       | None, "uuid" -> id_of target
       | None, _ -> plain ())
   | None, "uuid" when c.is_primary_key -> id_of table
@@ -195,25 +192,60 @@ let check_foreign_keys ctx flagged =
          List.map (fun (c, flag) -> (table, c, flag)) columns)
        flagged)
 
+(* A value is a constructor once capitalised: a letter, then letters,
+   digits, underscores or quotes. *)
+let constructor table value =
+  let valid i = function
+    | 'a' .. 'z' | 'A' .. 'Z' -> true
+    | '0' .. '9' | '_' | '\'' -> i > 0
+    | _ -> false
+  in
+  match
+    value <> "" && Seq.for_all (fun (i, c) -> valid i c) (String.to_seqi value)
+  with
+  | true -> Ok (String.capitalize_ascii value, value)
+  | false -> Error (Error.Bad_lookup_value {table; value})
+
+(* The module generated for a lookup table without ocaml=, named after it. *)
+let generated (t : Catalog.table) =
+  match t.values with
+  | None | Some [] -> Error (Error.Empty_lookup {table = t.name})
+  | Some values ->
+      let* constructors = map_result (constructor t.name) [] values in
+      Ok {module_name = String.capitalize_ascii t.name; constructors}
+
 let of_catalog ~module_prefix (catalog : Catalog.t) =
   let* kinds = map_result kind [] catalog in
-  let codec source path =
+  let codec source ~prefix path =
     let segments = String.split_on_char '.' path in
     let binding = String.lowercase_ascii (String.concat "_" segments) in
-    {binding; path = module_prefix @ segments; source}
+    {binding; path = prefix @ segments; source}
+  in
+  let* generated_lookups =
+    map_result
+      (fun (t : Catalog.table) ->
+        Result.map (fun l -> (t.name, l)) (generated t))
+      []
+      (List.filter
+         (fun (t : Catalog.table) -> List.mem (t.name, Lookup_table None) kinds)
+         catalog)
   in
   let lookups =
     List.filter_map
       (function
-        | name, Lookup_table ocaml ->
-            Some (name, Option.map (codec (Lookup name)) ocaml)
+        | name, Lookup_table (Some ocaml) ->
+            Some (name, codec (Lookup name) ~prefix:module_prefix ocaml)
+        | name, Lookup_table None ->
+            let l = List.assoc name generated_lookups in
+            Some (name, codec (Lookup name) ~prefix:[] l.module_name)
         | _, Entity _ -> None)
       kinds
   in
   let ids =
     List.filter_map
       (function
-        | name, Entity (Some id) -> Some (name, codec Id id)
+        | name, Entity (Some id) ->
+            Some (name, codec Id ~prefix:module_prefix id)
         | _, (Entity None | Lookup_table _) -> None)
       kinds
   in
@@ -245,4 +277,9 @@ let of_catalog ~module_prefix (catalog : Catalog.t) =
   let ctx = {lookups; ids; entities; synced} in
   let* () = check_foreign_keys ctx flagged in
   let* tables = map_result (table ctx) [] synced in
-  Ok {codecs = List.filter_map snd lookups @ List.map snd ids; tables}
+  Ok
+    {
+      lookups = List.map snd generated_lookups;
+      codecs = List.map snd lookups @ List.map snd ids;
+      tables;
+    }

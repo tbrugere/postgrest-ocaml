@@ -1,8 +1,12 @@
 (** What the emitter needs, from the catalog and the metadata rules.
 
     Table metadata:
-    - [kind=lookup, ocaml=<Module>]: a lookup table. It gets no module; a column
-      with a foreign key to it is typed [<Module>.t].
+    - [kind=lookup]: a lookup table. It gets no table module; a column with a
+      foreign key to it is typed [<Table>.t], where [<Table>] is the table's
+      name capitalised and is generated from the table's values: one constant
+      constructor per value, each value capitalised (see {!lookup}).
+    - [kind=lookup, ocaml=<Module>]: the same, but [<Module>] is written by hand
+      and nothing is generated; the column is typed [<Module>.t].
     - [id=<Module>]: the table's [uuid] primary key, and every [uuid] foreign
       key to it, is typed [<Module>.t].
 
@@ -21,7 +25,8 @@ type source = Id | Lookup of string  (** The lookup table. *)
 
 type codec = {
   binding : string;  (** [Ids.Plant_id] gives [ids_plant_id]. *)
-  path : string list;  (** The module, prefix included. *)
+  path : string list;
+      (** The module, prefix included; a generated lookup module has none. *)
   source : source;
 }
 
@@ -53,7 +58,15 @@ type table = {
   relationships : relationship list;  (** Forward ones, then reverse ones. *)
 }
 
+type lookup = {
+  module_name : string;  (** The table's name, capitalised. *)
+  constructors : (string * string) list;
+      (** [(constructor, value)], in the catalog's (sorted) order. *)
+}
+(** The module generated for a lookup table without [ocaml=]. *)
+
 type t = {
+  lookups : lookup list;  (** Generated lookup modules, in catalog order. *)
   codecs : codec list;  (** Lookup codecs in catalog order, then id codecs. *)
   tables : table list;  (** By name; lookup tables excluded. *)
 }

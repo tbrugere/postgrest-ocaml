@@ -107,6 +107,17 @@ let edited ?(drop = []) ?(tables = []) columns =
     fixture
   @ tables
 
+(* The fixture with a lookup table without ocaml=, so generated, referenced
+   by items.kind. *)
+let kinds ?(values = ["big"; "small"]) () =
+  table "kinds" ~comment:"Sizes.\nmetadata: kind=lookup" ~values
+    [column "value" "text" ~not_null:true ~pk:true]
+
+let with_kinds ?values () =
+  edited
+    ~tables:[kinds ?values ()]
+    [("items", column "kind" "text" ~not_null:true ~fk:"kinds")]
+
 let fail_with e = Alcotest.fail (Error.to_string e)
 
 let parse text =
@@ -391,18 +402,54 @@ let types_tests =
           [table "a" [column "b_key" "text" ~fk:"b"]; table "b" []]
         in
         check_column (table_of (model ~tables ()) "a") "b_key" "Str" "Nullable");
-    test_case "lookup without ocaml=" `Quick (fun () ->
-        check_error
+    test_case "a lookup without ocaml= is generated, outside the prefix" `Quick
+      (fun () ->
+        let m = model ~tables:(with_kinds ()) () in
+        check_column (table_of m "items") "kind" "Custom Kinds" "Required";
+        check
+          (list (pair string (list (pair string string))))
+          "lookups"
+          [("Kinds", [("Big", "big"); ("Small", "small")])]
+          (List.map
+             (fun (l : Model.lookup) -> (l.module_name, l.constructors))
+             m.lookups);
+        check (list string) "codecs, lookups first in catalog order"
           [
-            table "a" [column "l" "text" ~fk:"l"];
-            table "l" ~comment:"metadata: kind=lookup" [];
+            "thing_source";
+            "kinds";
+            "ids_item_id";
+            "ids_note_id";
+            "ids_parent_id";
           ]
-          (Lookup_without_ocaml {table = "a"; column = "l"; lookup = "l"}));
-    test_case "a lookup without ocaml= nobody references" `Quick (fun () ->
-        let tables =
-          edited ~tables:[table "l" ~comment:"metadata: kind=lookup" []] []
-        in
-        check int "codecs" 4 (List.length (model ~tables ()).codecs));
+          (List.map (fun (c : Model.codec) -> c.binding) m.codecs));
+    test_case "a lookup with ocaml= is not generated" `Quick (fun () ->
+        check int "lookups" 0 (List.length (model ()).lookups));
+    test_case "a lookup without ocaml= nobody references is generated" `Quick
+      (fun () ->
+        let tables = edited ~tables:[kinds ()] [] in
+        check (list string) "lookups" ["Kinds"]
+          (List.map
+             (fun (l : Model.lookup) -> l.module_name)
+             (model ~tables ()).lookups));
+    test_case "values that are constructors once capitalised" `Quick (fun () ->
+        let tables = with_kinds ~values:["Big"; "x1"; "in_progress"; "a'"] () in
+        check (list string) "constructors"
+          ["Big"; "X1"; "In_progress"; "A'"]
+          (List.concat_map
+             (fun (l : Model.lookup) -> List.map fst l.constructors)
+             (model ~tables ()).lookups));
+    test_case "a lookup without ocaml= and without values" `Quick (fun () ->
+        check_error (with_kinds ~values:[] ()) (Empty_lookup {table = "kinds"});
+        check_error
+          [table "l" ~comment:"metadata: kind=lookup" []]
+          (Empty_lookup {table = "l"}));
+    test_case "a lookup value that is not a constructor" `Quick (fun () ->
+        List.iter
+          (fun value ->
+            check_error
+              (with_kinds ~values:["big"; value] ())
+              (Bad_lookup_value {table = "kinds"; value}))
+          ["in progress"; "1st"; "_x"; "é"; ""]);
     test_case "generated column" `Quick (fun () ->
         check_error
           [table "a" [column "g" "text" ~generated:true ~default:true]]
@@ -661,6 +708,62 @@ let emission_tests =
              {|let items : (t, items, 'a, 'a list) Col.relationship =
                  {ty = Many; name = "items"}|})
           (item "items" (module_items "Parents" s)));
+    test_case "generated lookup module" `Quick (fun () ->
+        let s = Emit.structure (model ~tables:(with_kinds ()) ()) in
+        check string "Kinds"
+          (expected
+             {|module Kinds = struct
+                 type t = Big | Small
+                 let all : t list = [Big; Small]
+                 let to_string : t -> string = function
+                   | Big -> "big"
+                   | Small -> "small"
+                 let of_string : string -> t option = function
+                   | "big" -> Some Big
+                   | "small" -> Some Small
+                   | _ -> None
+                 let to_json : t -> Yojson.Safe.t = fun t -> `String (to_string t)
+                 let of_json : Yojson.Safe.t -> t option = function
+                   | `String s -> of_string s
+                   | _ -> None
+               end|})
+          (print
+             (List.find
+                (fun (i : Ppxlib.structure_item) ->
+                  match i.pstr_desc with
+                  | Pstr_module {pmb_name = {txt = Some "Kinds"; _}; _} -> true
+                  | _ -> false)
+                s));
+        check string "codec"
+          (expected
+             {|let kinds : Kinds.t Col.custom =
+                 { name = "kinds"; to_json = Kinds.to_json;
+                   of_json = Kinds.of_json }|})
+          (item "kinds" s));
+    test_case "generated lookup modules come before the codecs" `Quick
+      (fun () ->
+        let names =
+          List.filter_map
+            (fun (i : Ppxlib.structure_item) ->
+              match i.pstr_desc with
+              | Pstr_module {pmb_name = {txt = Some n; _}; _} -> Some n
+              | _ -> binding_name i)
+            (Emit.structure (model ~tables:(with_kinds ()) ()))
+        in
+        check (list string) "order"
+          [
+            "Col";
+            "Kinds";
+            "thing_source";
+            "kinds";
+            "ids_item_id";
+            "ids_note_id";
+            "ids_parent_id";
+            "Items";
+            "Notes";
+            "Parents";
+          ]
+          names);
     test_case "the printed file starts with the generated-file comment" `Quick
       (fun () ->
         check bool "header" true

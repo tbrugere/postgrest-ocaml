@@ -19,7 +19,8 @@ postgrest-codegen [--module-prefix MODULE] [-o FILE] catalog.json > tables.ml
 ```
 
 Writes one OCaml file (stdout, or `FILE`): an abstract type per table, a
-`Col.custom` codec per typed id or lookup table, then a module per table
+module per lookup table generated from its values, a `Col.custom` codec per
+typed id or lookup table, then a module per table
 with its `table`, one `Col.t` per column and one `Col.relationship` per
 foreign key. Exit status 2, with nothing written, on a bad argument, an
 unreadable file, or a catalog the rules below do not cover.
@@ -60,7 +61,8 @@ comment: `key=value` pairs and bare flags, separated by commas or spaces.
 
 | On | Metadata | Effect |
 | --- | --- | --- |
-| table | `kind=lookup, ocaml=<Module>` | A lookup table: no module of its own; a column with a foreign key to it is typed `<Module>.t`. |
+| table | `kind=lookup` | A lookup table: no table module; a module named after the table (`genres` → `Genres`) is generated from its values, and a column with a foreign key to it is typed `Genres.t`. |
+| table | `kind=lookup, ocaml=<Module>` | The same, but `<Module>` is written by hand and nothing is generated; the column is typed `<Module>.t`. |
 | table | `id=<Module>` | The `uuid` primary key, and every `uuid` foreign key to it, is typed `<Module>.t`. |
 | column | `server_only` | Left out: the client never reads or writes it. |
 | column | `no_reverse` | No `Many` back from the referenced table. |
@@ -68,6 +70,24 @@ comment: `key=value` pairs and bare flags, separated by commas or spaces.
 `<Module>` is a module path, under `--module-prefix` when given, with
 `type t`, `to_json : t -> Yojson.Safe.t` and
 `of_json : Yojson.Safe.t -> t option`.
+
+A generated lookup module is not under `--module-prefix` (it is in the
+generated file). It has one constant constructor per value, the value
+capitalised, in the catalog's sorted order:
+
+```ocaml
+module Genres = struct
+  type t = Essay | Novel | Poetry
+  let all : t list = [Essay; Novel; Poetry]
+  let to_string : t -> string = function Essay -> "essay" | ...
+  let of_string : string -> t option = function "essay" -> Some Essay | ... | _ -> None
+  let to_json : t -> Yojson.Safe.t = fun t -> `String (to_string t)
+  let of_json : Yojson.Safe.t -> t option = function `String s -> of_string s | _ -> None
+end
+```
+
+Its values are read when the catalog is dumped: adding a value to the table
+needs a new dump and a regeneration, as a column change does.
 
 ```sql
 comment on table public.plants is 'A plant of the collection.
@@ -86,8 +106,9 @@ Only what would generate wrong OCaml, or an embed PostgREST finds
 ambiguous (`Error.t`): a value that is not JSON or not a table object
 (with `ppx_deriving_yojson`'s path to the bad field), a
 malformed `metadata:` line or an unknown key, an unsupported type, a `uuid` column that is neither the
-key of a table with `id=` nor a foreign key to one, a foreign key to a
-lookup table without `ocaml=`, a generated column, two foreign keys between
+key of a table with `id=` nor a foreign key to one, a lookup table without
+`ocaml=` that has no values or a value that is not a constructor once
+capitalised (a letter, then letters, digits, `_` or `'`), a generated column, two foreign keys between
 the same two tables (`server_only` ones included), and a unique foreign key
 without `no_reverse`. Multi-column foreign keys, and a second foreign key
 on one column, are not reported, so not checked for ambiguity either. Names

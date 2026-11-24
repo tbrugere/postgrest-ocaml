@@ -87,6 +87,60 @@ let table_module ({name; columns; relationships} : Model.table) =
        ~name:{txt = Some (String.capitalize_ascii name); loc}
        ~expr:(B.pmod_structure items))
 
+let constant name = B.pexp_construct (lid [name]) None
+let constant_pattern name = B.ppat_construct (lid [name]) None
+
+(* type t = A | B, all, to_string, of_string, to_json, of_json. *)
+let lookup_module ({module_name; constructors} : Model.lookup) =
+  let t =
+    B.pstr_type Recursive
+      [
+        B.type_declaration ~name:{txt = "t"; loc} ~params:[] ~cstrs:[]
+          ~kind:
+            (Ptype_variant
+               (List.map
+                  (fun (c, _) ->
+                    B.constructor_declaration ~name:{txt = c; loc}
+                      ~args:(Pcstr_tuple []) ~res:None)
+                  constructors))
+          ~private_:Public ~manifest:None;
+      ]
+  in
+  let all = B.elist (List.map (fun (c, _) -> constant c) constructors) in
+  let to_string =
+    B.pexp_function_cases
+      (List.map
+         (fun (c, v) ->
+           B.case ~lhs:(constant_pattern c) ~guard:None ~rhs:(B.estring v))
+         constructors)
+  in
+  let of_string =
+    B.pexp_function_cases
+      (List.map
+         (fun (c, v) ->
+           B.case ~lhs:(B.pstring v) ~guard:None
+             ~rhs:[%expr Some [%e constant c]])
+         constructors
+      @ [B.case ~lhs:[%pat? _] ~guard:None ~rhs:[%expr None]])
+  in
+  let items =
+    [
+      t;
+      [%stri let all : t list = [%e all]];
+      [%stri let to_string : t -> string = [%e to_string]];
+      [%stri let of_string : string -> t option = [%e of_string]];
+      [%stri let to_json : t -> Yojson.Safe.t = fun t -> `String (to_string t)];
+      [%stri
+        let of_json : Yojson.Safe.t -> t option = function
+          | `String s -> of_string s
+          | _ -> None];
+    ]
+  in
+  B.pstr_module
+    (B.module_binding
+       ~name:{txt = Some module_name; loc}
+       ~expr:(B.pmod_structure items))
+
 let phantom_type name =
   B.pstr_type Recursive
     [
@@ -98,6 +152,7 @@ let structure (model : Model.t) =
   [%stri [@@@ocamlformat "disable"]]
   :: [%stri module Col = Postgrest.Col]
   :: List.map (fun (t : Model.table) -> phantom_type t.name) model.tables
+  @ List.map lookup_module model.lookups
   @ List.map codec model.codecs
   @ List.map table_module model.tables
 
@@ -106,8 +161,10 @@ let header =
    edit: change the schema, re-dump the catalog and regenerate.
 
    One module per table. A column's OCaml type follows its SQL type; uuid
-   and lookup-table columns use the module named in the `metadata:` line of
-   a table comment. Columns marked server_only are left out. text[] is
+   columns, and columns of a lookup table with ocaml=, use the module named
+   in the `metadata:` line of a table comment; a lookup table without ocaml=
+   gets a module generated from its values. Columns marked server_only are
+   left out. text[] is
    carried as a JSON array, which PostgREST accepts and returns; a filter on
    it needs a hand-built {...} literal, not the column's encoding.
 
