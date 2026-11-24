@@ -55,6 +55,18 @@ The executable over a one-table catalog, as catalog.sql writes it, on stdout:
         { ty = (Nullable Str); name = "label" }
     end
 
+Without id=, the uuid key gets a generated Things_id module, unless
+--no-generate-ids turns that default off:
+
+  $ sed 's/"metadata: id=Thing_id"/null/' catalog.json > plain.json
+  $ postgrest-codegen plain.json | grep -E '^module Things|let id'
+  module Things_id :
+  module Things =
+      let id : (t, Things_id.t, [ `Mandatory ]) Col.t =
+  $ postgrest-codegen --no-generate-ids plain.json | grep -E '^module Things|let id'
+  module Things =
+      let id : (t, string, [ `Mandatory ]) Col.t =
+
 -o writes the same text to a file:
 
   $ postgrest-codegen --module-prefix My_domain -o things.ml catalog.json

@@ -27,7 +27,13 @@ type table = {
 }
 
 type lookup = {module_name : string; constructors : (string * string) list}
-type t = {lookups : lookup list; codecs : codec list; tables : table list}
+
+type t = {
+  lookups : lookup list;
+  id_modules : string list;
+  codecs : codec list;
+  tables : table list;
+}
 
 let ( let* ) = Result.bind
 
@@ -48,7 +54,9 @@ let plain_type = function
 
 let token = function key, None -> key | key, Some value -> key ^ "=" ^ value
 
-type kind = Lookup_table of string option | Entity of string option
+type kind =
+  | Lookup_table of string option
+  | Entity of {id : string option; generate_id : bool option}
 
 let kind (t : Catalog.table) =
   match Metadata.of_comment t.comment with
@@ -57,7 +65,7 @@ let kind (t : Catalog.table) =
       let lookup = List.mem ("kind", Some "lookup") entries in
       let allowed = function
         | "kind", Some "lookup" | "ocaml", Some _ -> lookup
-        | "id", Some _ -> not lookup
+        | "id", Some _ | "generate_id", Some ("true" | "false") -> not lookup
         | _ -> false
       in
       let value key = Option.join (List.assoc_opt key entries) in
@@ -67,7 +75,9 @@ let kind (t : Catalog.table) =
             (Error.Unknown_metadata
                {table = t.name; column = None; key = token e})
       | None, true -> Ok (t.name, Lookup_table (value "ocaml"))
-      | None, false -> Ok (t.name, Entity (value "id")))
+      | None, false ->
+          let generate_id = Option.map bool_of_string (value "generate_id") in
+          Ok (t.name, Entity {id = value "id"; generate_id}))
 
 type flag = Plain | Server_only | No_reverse
 
@@ -213,8 +223,43 @@ let generated (t : Catalog.table) =
       let* constructors = map_result (constructor t.name) [] values in
       Ok {module_name = String.capitalize_ascii t.name; constructors}
 
-let of_catalog ~module_prefix (catalog : Catalog.t) =
+(* How a table's uuid key is typed: by a hand-written module (id=), by a
+   generated <Table>_id module, or not at all (a string). *)
+type id = Hand_written of string | Generated of string | No_id
+
+let has_uuid_key (t : Catalog.table) =
+  match
+    List.filter (fun (c : Catalog.column) -> c.is_primary_key) t.columns
+  with
+  | [c] -> c.sql_type = "uuid"
+  | _ -> false
+
+let id ~generate_ids (t : Catalog.table) ~id ~generate_id =
+  let generated = String.capitalize_ascii t.name ^ "_id" in
+  match (id, generate_id) with
+  | Some _, Some true -> Error (Error.Conflicting_id {table = t.name})
+  | Some m, (None | Some false) -> Ok (Hand_written m)
+  | None, Some true when has_uuid_key t -> Ok (Generated generated)
+  | None, Some true ->
+      Error (Error.Generated_id_without_uuid_key {table = t.name})
+  | None, Some false -> Ok No_id
+  | None, None when generate_ids && has_uuid_key t -> Ok (Generated generated)
+  | None, None -> Ok No_id
+
+let of_catalog ?(generate_ids = true) ~module_prefix (catalog : Catalog.t) =
   let* kinds = map_result kind [] catalog in
+  let* table_ids =
+    map_result
+      (fun (t : Catalog.table) ->
+        match List.assoc t.name kinds with
+        | Entity {id = i; generate_id} ->
+            Result.map
+              (fun i -> Some (t.name, i))
+              (id ~generate_ids t ~id:i ~generate_id)
+        | Lookup_table _ -> Ok None)
+      [] catalog
+  in
+  let table_ids = List.filter_map Fun.id table_ids in
   let codec source ~prefix path =
     let segments = String.split_on_char '.' path in
     let binding = String.lowercase_ascii (String.concat "_" segments) in
@@ -243,10 +288,10 @@ let of_catalog ~module_prefix (catalog : Catalog.t) =
   let ids =
     List.filter_map
       (function
-        | name, Entity (Some id) ->
-            Some (name, codec Id ~prefix:module_prefix id)
-        | _, (Entity None | Lookup_table _) -> None)
-      kinds
+        | name, Hand_written m -> Some (name, codec Id ~prefix:module_prefix m)
+        | name, Generated m -> Some (name, codec Id ~prefix:[] m)
+        | _, No_id -> None)
+      table_ids
   in
   let entities =
     List.filter_map
@@ -279,6 +324,11 @@ let of_catalog ~module_prefix (catalog : Catalog.t) =
   Ok
     {
       lookups = List.map snd generated_lookups;
+      id_modules =
+        List.filter_map
+          (function
+            | _, Generated m -> Some m | _, (Hand_written _ | No_id) -> None)
+          table_ids;
       codecs = List.map snd lookups @ List.map snd ids;
       tables;
     }

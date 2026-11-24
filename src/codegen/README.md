@@ -15,7 +15,7 @@ library `postgrest-codegen` (module `Postgrest_codegen`).
 
 ```
 psql "$DB_URL" -X -q -At -v ON_ERROR_STOP=1 -f catalog.sql > catalog.json
-postgrest-codegen [--module-prefix MODULE] [-o FILE] catalog.json > tables.ml
+postgrest-codegen [--module-prefix MODULE] [--no-generate-ids] [-o FILE] catalog.json > tables.ml
 ```
 
 Writes one OCaml file (stdout, or `FILE`): an abstract type per table, a
@@ -48,7 +48,7 @@ field missing, mistyped or unknown is an error. It links neither `postgrest`
 nor a database driver; its opam package depends on `postgrest` of the same
 version only because the code it prints targets that version's API.
 
-Postgres types map to `Col.base`: `text` and `uuid` (without `id=`) → `Str`, `integer` → `Integer`,
+Postgres types map to `Col.base`: `text` and `uuid` (when no id module types it) → `Str`, `integer` → `Integer`,
 `double precision` → `Numeric`, `boolean` → `Bool`,
 `timestamp with time zone` → `TimestampTz`, `jsonb` and `text[]` → `JSON`.
 `NOT NULL` gives `Not_Null`, otherwise `Nullable`; a column is `` `Mandatory ``
@@ -63,13 +63,30 @@ comment: `key=value` pairs and bare flags, separated by commas or spaces.
 | --- | --- | --- |
 | table | `kind=lookup` | A lookup table: no table module; a module named after the table (`genres` → `Genres`) is generated from its values, and a column with a foreign key to it is typed `Genres.t`. |
 | table | `kind=lookup, ocaml=<Module>` | The same, but `<Module>` is written by hand and nothing is generated; the column is typed `<Module>.t`. |
-| table | `id=<Module>` | The `uuid` primary key, and every `uuid` foreign key to it, is typed `<Module>.t`. Without it, and for any other `uuid` column, a `uuid` is a `string`. |
+| table | (none) | A table whose primary key is a single `uuid` column gets a generated `<Table>_id` module (`authors` → `Authors_id`); its key, and every `uuid` foreign key to it, is typed `Authors_id.t`. `--no-generate-ids` turns this default off. |
+| table | `generate_id=true\|false` | Overrides that default for the table; `true` needs a single `uuid` primary key. |
+| table | `id=<Module>` | The same typing, but `<Module>` is written by hand and nothing is generated. Cannot be combined with `generate_id=true`. Any `uuid` column no id module types is a `string`. |
 | column | `server_only` | Left out: the client never reads or writes it. |
 | column | `no_reverse` | No `Many` back from the referenced table. |
 
 `<Module>` is a module path, under `--module-prefix` when given, with
 `type t`, `to_json : t -> Yojson.Safe.t` and
 `of_json : Yojson.Safe.t -> t option`.
+
+A generated id module is abstract over any string (the format is not
+checked), and is not under `--module-prefix`:
+
+```ocaml
+module Authors_id : sig
+  type t
+  val of_string : string -> t
+  val to_string : t -> string
+  val equal : t -> t -> bool
+  val compare : t -> t -> int
+  val to_json : t -> Yojson.Safe.t
+  val of_json : Yojson.Safe.t -> t option
+end = struct type t = string ... end
+```
 
 A generated lookup module is not under `--module-prefix` (it is in the
 generated file). It has one constant constructor per value, the value
@@ -107,7 +124,9 @@ ambiguous (`Error.t`): a value that is not JSON or not a table object
 (with `ppx_deriving_yojson`'s path to the bad field), a
 malformed `metadata:` line or an unknown key, an unsupported type, a lookup table without
 `ocaml=` that has no values or a value that is not a constructor once
-capitalised (a letter, then letters, digits, `_` or `'`), a generated column, two foreign keys between
+capitalised (a letter, then letters, digits, `_` or `'`), `id=` with
+`generate_id=true`, `generate_id=true` without a single `uuid` primary key, a
+generated column, two foreign keys between
 the same two tables (`server_only` ones included), and a unique foreign key
 without `no_reverse`. Multi-column foreign keys, and a second foreign key
 on one column, are not reported, so not checked for ambiguity either. Names

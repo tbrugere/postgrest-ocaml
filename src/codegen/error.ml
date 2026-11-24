@@ -4,6 +4,8 @@ type t =
   | Malformed_metadata of {table : string; column : string option}
   | Unknown_metadata of {table : string; column : string option; key : string}
   | Unsupported_type of {table : string; column : string; sql_type : string}
+  | Conflicting_id of {table : string}
+  | Generated_id_without_uuid_key of {table : string}
   | Empty_lookup of {table : string}
   | Bad_lookup_value of {table : string; value : string}
   | Generated_column of {table : string; column : string}
@@ -26,6 +28,14 @@ let to_string = function
       Printf.sprintf "%s: unsupported type %s"
         (place table (Some column))
         sql_type
+  | Conflicting_id {table} ->
+      Printf.sprintf
+        "table %s: id= names a hand-written module, generate_id=true asks for \
+         a generated one"
+        table
+  | Generated_id_without_uuid_key {table} ->
+      Printf.sprintf
+        "table %s: generate_id=true needs a single uuid primary key" table
   | Empty_lookup {table} ->
       Printf.sprintf
         "table %s: a lookup table without ocaml= needs values to generate its \

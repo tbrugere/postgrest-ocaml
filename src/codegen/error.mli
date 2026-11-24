@@ -13,6 +13,11 @@ type t =
           given twice, or a [key=] without a value. *)
   | Unknown_metadata of {table : string; column : string option; key : string}
   | Unsupported_type of {table : string; column : string; sql_type : string}
+  | Conflicting_id of {table : string}
+      (** [id=] and [generate_id=true] on the same table. *)
+  | Generated_id_without_uuid_key of {table : string}
+      (** [generate_id=true] on a table whose primary key is not a single [uuid]
+          column. *)
   | Empty_lookup of {table : string}
       (** A lookup table without [ocaml=] and without values: its generated type
           would have no constructor. *)

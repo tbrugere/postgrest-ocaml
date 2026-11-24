@@ -7,8 +7,14 @@
       constructor per value, each value capitalised (see {!lookup}).
     - [kind=lookup, ocaml=<Module>]: the same, but [<Module>] is written by hand
       and nothing is generated; the column is typed [<Module>.t].
-    - [id=<Module>]: the table's [uuid] primary key, and every [uuid] foreign
-      key to it, is typed [<Module>.t]. Any other [uuid] column is a [string].
+    - A table whose primary key is a single [uuid] column gets a generated
+      [<Table>_id] module ([authors] gives [Authors_id], see {!t.id_modules}):
+      its key, and every [uuid] foreign key to it, is typed [<Table>_id.t].
+      [generate_ids:false] turns that default off.
+    - [generate_id=true|false]: overrides that default for the table; [true]
+      needs a single [uuid] primary key.
+    - [id=<Module>]: the same typing, but [<Module>] is written by hand and
+      nothing is generated. Any other [uuid] column is a [string].
 
     Column metadata, bare flags:
     - [server_only]: the column is left out.
@@ -67,9 +73,17 @@ type lookup = {
 
 type t = {
   lookups : lookup list;  (** Generated lookup modules, in catalog order. *)
+  id_modules : string list;
+      (** Generated id modules ([Authors_id]), in catalog order: an abstract [t]
+          over any string, with [of_string], [to_string], [equal], [compare],
+          [to_json] and [of_json]. *)
   codecs : codec list;  (** Lookup codecs in catalog order, then id codecs. *)
   tables : table list;  (** By name; lookup tables excluded. *)
 }
 
-val of_catalog : module_prefix:string list -> Catalog.t -> (t, Error.t) result
+val of_catalog :
+  ?generate_ids:bool ->
+  module_prefix:string list ->
+  Catalog.t ->
+  (t, Error.t) result
 (** Tables, codecs and relationships in the order of the catalog. *)

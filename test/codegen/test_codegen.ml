@@ -125,8 +125,8 @@ let parse text =
 
 let catalog tables = parse (text tables)
 
-let model ?(module_prefix = ["Domain"]) ?(tables = fixture) () =
-  match Model.of_catalog ~module_prefix (catalog tables) with
+let model ?generate_ids ?(module_prefix = ["Domain"]) ?(tables = fixture) () =
+  match Model.of_catalog ?generate_ids ~module_prefix (catalog tables) with
   | Ok m -> m
   | Error e -> fail_with e
 
@@ -380,9 +380,10 @@ let types_tests =
         check_error
           [table "a" [column "p" "point"]]
           (Unsupported_type {table = "a"; column = "p"; sql_type = "point"}));
-    test_case "uuid key without id= is a string" `Quick (fun () ->
+    test_case "uuid key without id= is a string without generated ids" `Quick
+      (fun () ->
         check_column
-          (table_of (model ~tables:[table "a" [id]] ()) "a")
+          (table_of (model ~generate_ids:false ~tables:[table "a" [id]] ()) "a")
           "id" "Str" "Required");
     test_case "uuid that is neither a key nor a foreign key is a string" `Quick
       (fun () ->
@@ -399,10 +400,75 @@ let types_tests =
             table "b" [id];
           ]
         in
-        let m = model ~tables () in
+        let m = model ~generate_ids:false ~tables () in
         check_column (table_of m "a") "id" "Custom Domain.A" "Required";
         check_column (table_of m "a") "b_id" "Str" "Nullable";
         check_column (table_of m "b") "id" "Str" "Required");
+    test_case "a uuid key without id= gets a generated <Table>_id" `Quick
+      (fun () ->
+        let tables =
+          [
+            table "authors" [id];
+            table "books" [id; column "author_id" "uuid" ~fk:"authors"];
+          ]
+        in
+        let m = model ~tables () in
+        check (list string) "id modules" ["Authors_id"; "Books_id"] m.id_modules;
+        check_column (table_of m "authors") "id" "Custom Authors_id" "Required";
+        check_column (table_of m "books") "author_id" "Custom Authors_id"
+          "Nullable";
+        check (list string) "codecs" ["authors_id"; "books_id"]
+          (List.map (fun (c : Model.codec) -> c.binding) m.codecs));
+    test_case "id= is hand-written: nothing generated" `Quick (fun () ->
+        check (list string) "id modules" [] (model ()).id_modules);
+    test_case "generate_id=false keeps a string" `Quick (fun () ->
+        let tables = [table "a" ~comment:"metadata: generate_id=false" [id]] in
+        let m = model ~tables () in
+        check (list string) "id modules" [] m.id_modules;
+        check_column (table_of m "a") "id" "Str" "Required");
+    test_case "generate_id=true overrides generate_ids:false" `Quick (fun () ->
+        let tables =
+          [table "a" ~comment:"metadata: generate_id=true" [id]; table "b" [id]]
+        in
+        let m = model ~generate_ids:false ~tables () in
+        check (list string) "id modules" ["A_id"] m.id_modules;
+        check_column (table_of m "b") "id" "Str" "Required");
+    test_case "no generated id without a single uuid key" `Quick (fun () ->
+        let tables =
+          [
+            table "a" [column "id" "integer" ~not_null:true ~pk:true];
+            table "b"
+              [
+                column "x" "uuid" ~not_null:true ~pk:true;
+                column "y" "uuid" ~not_null:true ~pk:true;
+              ];
+          ]
+        in
+        check (list string) "id modules" [] (model ~tables ()).id_modules);
+    test_case "id= with generate_id=true" `Quick (fun () ->
+        check_error
+          [table "a" ~comment:"metadata: id=A, generate_id=true" [id]]
+          (Conflicting_id {table = "a"}));
+    test_case "generate_id=true without a uuid key" `Quick (fun () ->
+        check_error
+          [
+            table "a" ~comment:"metadata: generate_id=true"
+              [column "id" "integer" ~not_null:true ~pk:true];
+          ]
+          (Generated_id_without_uuid_key {table = "a"}));
+    test_case "generate_id takes true or false, on entity tables" `Quick
+      (fun () ->
+        check_error
+          [table "a" ~comment:"metadata: generate_id=yes" [id]]
+          (Unknown_metadata
+             {table = "a"; column = None; key = "generate_id=yes"});
+        check_error
+          [
+            table "l" ~comment:"metadata: kind=lookup, generate_id=true"
+              ~values:["x"] [];
+          ]
+          (Unknown_metadata
+             {table = "l"; column = None; key = "generate_id=true"}));
     test_case "a text foreign key to a table without id= is text" `Quick
       (fun () ->
         let tables =
@@ -771,6 +837,41 @@ let emission_tests =
             "Parents";
           ]
           names);
+    test_case "generated id module" `Quick (fun () ->
+        let s = Emit.structure (model ~tables:[table "authors" [id]] ()) in
+        check string "Authors_id"
+          (expected
+             {|module Authors_id : sig
+                 type t
+                 val of_string : string -> t
+                 val to_string : t -> string
+                 val equal : t -> t -> bool
+                 val compare : t -> t -> int
+                 val to_json : t -> Yojson.Safe.t
+                 val of_json : Yojson.Safe.t -> t option
+               end = struct
+                 type t = string
+                 let of_string s = s
+                 let to_string t = t
+                 let equal = String.equal
+                 let compare = String.compare
+                 let to_json t = `String t
+                 let of_json = function `String s -> Some s | _ -> None
+               end|})
+          (print
+             (List.find
+                (fun (i : Ppxlib.structure_item) ->
+                  match i.pstr_desc with
+                  | Pstr_module {pmb_name = {txt = Some "Authors_id"; _}; _} ->
+                      true
+                  | _ -> false)
+                s));
+        check string "codec"
+          (expected
+             {|let authors_id : Authors_id.t Col.custom =
+                 { name = "uuid"; to_json = Authors_id.to_json;
+                   of_json = Authors_id.of_json }|})
+          (item "authors_id" s));
     test_case "the printed file starts with the generated-file comment" `Quick
       (fun () ->
         check bool "header" true
