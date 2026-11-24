@@ -72,6 +72,6 @@
   <text class="attr" x="414" y="117">author_id : uuid</text>
   <text class="key" x="388" y="139">FK</text>
   <text class="attr" x="414" y="139">genre : text</text>
-  <text class="attr" x="414" y="161">year : integer?</text>
+  <text class="attr" x="414" y="161">year : integer</text>
   <text class="attr" x="414" y="183">added_at : timestamptz = now()</text>
 </svg>

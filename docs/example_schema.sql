@@ -19,6 +19,6 @@ create table books (
   title     text not null,
   author_id uuid not null references authors (id),
   genre     text not null references genres (value),
-  year      integer,
+  year      integer not null,
   added_at  timestamptz not null default now()
 );
