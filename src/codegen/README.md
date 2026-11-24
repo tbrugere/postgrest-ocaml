@@ -48,7 +48,7 @@ field missing, mistyped or unknown is an error. It links neither `postgrest`
 nor a database driver; its opam package depends on `postgrest` of the same
 version only because the code it prints targets that version's API.
 
-Postgres types map to `Col.base`: `text` → `Str`, `integer` → `Integer`,
+Postgres types map to `Col.base`: `text` and `uuid` (without `id=`) → `Str`, `integer` → `Integer`,
 `double precision` → `Numeric`, `boolean` → `Bool`,
 `timestamp with time zone` → `TimestampTz`, `jsonb` and `text[]` → `JSON`.
 `NOT NULL` gives `Not_Null`, otherwise `Nullable`; a column is `` `Mandatory ``
@@ -63,7 +63,7 @@ comment: `key=value` pairs and bare flags, separated by commas or spaces.
 | --- | --- | --- |
 | table | `kind=lookup` | A lookup table: no table module; a module named after the table (`genres` → `Genres`) is generated from its values, and a column with a foreign key to it is typed `Genres.t`. |
 | table | `kind=lookup, ocaml=<Module>` | The same, but `<Module>` is written by hand and nothing is generated; the column is typed `<Module>.t`. |
-| table | `id=<Module>` | The `uuid` primary key, and every `uuid` foreign key to it, is typed `<Module>.t`. |
+| table | `id=<Module>` | The `uuid` primary key, and every `uuid` foreign key to it, is typed `<Module>.t`. Without it, and for any other `uuid` column, a `uuid` is a `string`. |
 | column | `server_only` | Left out: the client never reads or writes it. |
 | column | `no_reverse` | No `Many` back from the referenced table. |
 
@@ -105,8 +105,7 @@ named after this table.
 Only what would generate wrong OCaml, or an embed PostgREST finds
 ambiguous (`Error.t`): a value that is not JSON or not a table object
 (with `ppx_deriving_yojson`'s path to the bad field), a
-malformed `metadata:` line or an unknown key, an unsupported type, a `uuid` column that is neither the
-key of a table with `id=` nor a foreign key to one, a lookup table without
+malformed `metadata:` line or an unknown key, an unsupported type, a lookup table without
 `ocaml=` that has no values or a value that is not a constructor once
 capitalised (a letter, then letters, digits, `_` or `'`), a generated column, two foreign keys between
 the same two tables (`server_only` ones included), and a unique foreign key

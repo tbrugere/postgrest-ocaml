@@ -4,7 +4,6 @@ type t =
   | Malformed_metadata of {table : string; column : string option}
   | Unknown_metadata of {table : string; column : string option; key : string}
   | Unsupported_type of {table : string; column : string; sql_type : string}
-  | Uuid_without_id of {table : string; column : string}
   | Empty_lookup of {table : string}
   | Bad_lookup_value of {table : string; value : string}
   | Generated_column of {table : string; column : string}
@@ -27,10 +26,6 @@ let to_string = function
       Printf.sprintf "%s: unsupported type %s"
         (place table (Some column))
         sql_type
-  | Uuid_without_id {table; column} ->
-      Printf.sprintf
-        "%s: a uuid column must be the key of, or reference, a table with id="
-        (place table (Some column))
   | Empty_lookup {table} ->
       Printf.sprintf
         "table %s: a lookup table without ocaml= needs values to generate its \

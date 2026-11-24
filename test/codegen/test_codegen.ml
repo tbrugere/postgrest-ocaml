@@ -380,22 +380,29 @@ let types_tests =
         check_error
           [table "a" [column "p" "point"]]
           (Unsupported_type {table = "a"; column = "p"; sql_type = "point"}));
-    test_case "uuid key without id=" `Quick (fun () ->
-        check_error
-          [table "a" [id]]
-          (Uuid_without_id {table = "a"; column = "id"}));
-    test_case "uuid that is neither a key nor a foreign key" `Quick (fun () ->
-        check_error
-          (edited [("parents", column "other" "uuid")])
-          (Uuid_without_id {table = "parents"; column = "other"}));
-    test_case "uuid foreign key to a table without id=" `Quick (fun () ->
-        check_error
+    test_case "uuid key without id= is a string" `Quick (fun () ->
+        check_column
+          (table_of (model ~tables:[table "a" [id]] ()) "a")
+          "id" "Str" "Required");
+    test_case "uuid that is neither a key nor a foreign key is a string" `Quick
+      (fun () ->
+        let tables = edited [("parents", column "other" "uuid")] in
+        check_column
+          (table_of (model ~tables ()) "parents")
+          "other" "Str" "Nullable");
+    test_case "uuid foreign key to a table without id= is a string" `Quick
+      (fun () ->
+        let tables =
           [
             table "a" ~comment:"metadata: id=A"
               [id; column "b_id" "uuid" ~fk:"b"];
-            table "b" [];
+            table "b" [id];
           ]
-          (Uuid_without_id {table = "a"; column = "b_id"}));
+        in
+        let m = model ~tables () in
+        check_column (table_of m "a") "id" "Custom Domain.A" "Required";
+        check_column (table_of m "a") "b_id" "Str" "Nullable";
+        check_column (table_of m "b") "id" "Str" "Required");
     test_case "a text foreign key to a table without id= is text" `Quick
       (fun () ->
         let tables =

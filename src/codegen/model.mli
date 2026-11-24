@@ -8,7 +8,7 @@
     - [kind=lookup, ocaml=<Module>]: the same, but [<Module>] is written by hand
       and nothing is generated; the column is typed [<Module>.t].
     - [id=<Module>]: the table's [uuid] primary key, and every [uuid] foreign
-      key to it, is typed [<Module>.t].
+      key to it, is typed [<Module>.t]. Any other [uuid] column is a [string].
 
     Column metadata, bare flags:
     - [server_only]: the column is left out.

@@ -13,9 +13,6 @@ type t =
           given twice, or a [key=] without a value. *)
   | Unknown_metadata of {table : string; column : string option; key : string}
   | Unsupported_type of {table : string; column : string; sql_type : string}
-  | Uuid_without_id of {table : string; column : string}
-      (** A [uuid] column that is neither the key of a table with [id=] nor a
-          foreign key to one. *)
   | Empty_lookup of {table : string}
       (** A lookup table without [ocaml=] and without values: its generated type
           would have no constructor. *)

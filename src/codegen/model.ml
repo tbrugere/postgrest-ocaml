@@ -99,13 +99,12 @@ let embeds ctx (c : Catalog.column) =
   | Some _ | None -> None
 
 let base ctx table (c : Catalog.column) =
-  let uuid_without_id () =
-    Error (Error.Uuid_without_id {table; column = c.name})
-  in
+  (* A uuid is typed by the id= of the table it identifies, a string
+     without one. *)
   let id_of referenced =
     match List.assoc_opt referenced ctx.ids with
     | Some codec -> Ok (Custom codec)
-    | None -> uuid_without_id ()
+    | None -> Ok Str
   in
   let plain () =
     match plain_type c.sql_type with
@@ -124,7 +123,7 @@ let base ctx table (c : Catalog.column) =
       | None, "uuid" -> id_of target
       | None, _ -> plain ())
   | None, "uuid" when c.is_primary_key -> id_of table
-  | None, "uuid" -> uuid_without_id ()
+  | None, "uuid" -> Ok Str
   | None, _ -> plain ()
 
 let column ctx table ((c : Catalog.column), _) =
