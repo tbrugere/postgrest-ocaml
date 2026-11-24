@@ -19,4 +19,9 @@ val encode_column_list : ('table, 'a) t -> string
 module Syntax : sig
   val ( let+ ) : ('a, 'b) t -> ('b -> 'c) -> ('a, 'c) t
   val ( and+ ) : ('a, 'b) t -> ('a, 'c) t -> ('a, 'b * 'c) t
+  val col : ('table, 'a, 'o) Col.t -> ('table, 'a) t
+  val rel :
+    ('sourcetable, 'desttable, 'a, 'out) Col.BaseTypes.relationship ->
+    ('desttable, 'a) t ->
+    ('sourcetable, 'out) t
 end

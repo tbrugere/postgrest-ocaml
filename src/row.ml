@@ -86,4 +86,7 @@ let encode_column_list (row : ('table, 'a) t) : string =
 module Syntax = struct
   let ( let+ ) row f = map f row
   let ( and+ ) = pair
+
+  let col = col
+  let rel = rel
 end
